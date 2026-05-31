@@ -77,6 +77,130 @@ select {
   font-size: 20px;
 }
 
+.runtime-timer {
+  align-items: center;
+  background: rgba(16, 20, 24, 0.78);
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 8px;
+  color: rgba(248, 243, 231, 0.92);
+  display: inline-flex;
+  font-size: 13px;
+  gap: 10px;
+  left: 50%;
+  padding: 8px 12px;
+  pointer-events: none;
+  position: fixed;
+  top: 18px;
+  transform: translateX(-50%);
+  z-index: 2000;
+}
+
+.runtime-timer strong {
+  color: #f8f3e7;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.runtime-timer span {
+  color: rgba(248, 243, 231, 0.66);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.runtime-timer--overtime {
+  border-color: rgba(255, 90, 54, 0.72);
+}
+
+.runtime-timer--overtime strong {
+  color: #ff5a36;
+}
+
+.quake-terminal-handle {
+  background: rgba(16, 20, 24, 0.72);
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 8px;
+  bottom: 78px;
+  color: rgba(248, 243, 231, 0.72);
+  cursor: pointer;
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+  font-size: 18px;
+  height: 34px;
+  padding: 0;
+  position: fixed;
+  right: 42px;
+  width: 34px;
+  z-index: 2001;
+}
+
+.quake-terminal {
+  background: rgba(10, 13, 16, 0.96);
+  border-bottom: 1px solid rgba(248, 243, 231, 0.16);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  color: #f8f3e7;
+  display: grid;
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+  grid-template-rows: auto 1fr auto;
+  left: 0;
+  min-height: 280px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  transform: translateY(-102%);
+  transition: transform 160ms ease-out;
+  z-index: 3000;
+}
+
+.quake-terminal--open {
+  transform: translateY(0);
+}
+
+.quake-terminal__bar {
+  align-items: center;
+  border-bottom: 1px solid rgba(248, 243, 231, 0.12);
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+.quake-terminal__bar strong {
+  color: #f3b23a;
+}
+
+.quake-terminal__bar span {
+  color: rgba(248, 243, 231, 0.6);
+}
+
+.quake-terminal__history {
+  color: rgba(248, 243, 231, 0.78);
+  font-size: 15px;
+  line-height: 1.5;
+  max-height: 330px;
+  overflow: auto;
+  padding: 16px 18px;
+}
+
+.quake-terminal__form {
+  align-items: center;
+  border-top: 1px solid rgba(248, 243, 231, 0.12);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto 1fr;
+  padding: 14px 18px 18px;
+}
+
+.quake-terminal__form span {
+  color: #f3b23a;
+}
+
+.quake-terminal__form input {
+  background: transparent;
+  border: 0;
+  color: #f8f3e7;
+  outline: 0;
+  width: 100%;
+}
+
 .slide-shell {
   width: 100%;
   height: 100%;

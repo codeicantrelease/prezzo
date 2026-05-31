@@ -16,5 +16,15 @@ export type DeckConfig = {
   description?: string;
   slideCount?: number;
   component: ComponentType;
+  runtime?: {
+    timer?: {
+      enabled: boolean;
+      mode?: "elapsed" | "countdown";
+      durationMinutes?: number;
+    };
+    terminal?: {
+      enabled: boolean;
+    };
+  };
   remotion?: RemotionDeckConfig;
 };

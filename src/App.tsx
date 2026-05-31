@@ -1,4 +1,5 @@
 import { deckConfigs, findDeck, getDeckOrDefault } from "./deck-registry";
+import { PresentationShell } from "./runtime/PresentationShell";
 
 function selectedDeckSlugFromLocation() {
   const params = new URLSearchParams(window.location.search);
@@ -42,5 +43,9 @@ export function App() {
 
   const DeckComponent = getDeckOrDefault(selectedDeck.slug).component;
 
-  return <DeckComponent />;
+  return (
+    <PresentationShell deck={selectedDeck}>
+      <DeckComponent />
+    </PresentationShell>
+  );
 }

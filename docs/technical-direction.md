@@ -56,6 +56,15 @@ The `overrides` block patches Spectacle transitive audit findings for `@babel/ru
 - `recharts`: Starter charting library for data-driven presentation examples.
 - `lucide-react`: Icon set for presentation UI and diagram primitives.
 
+## Runtime Chrome
+
+Decks can opt into persistent runtime UI through `deck.config.ts`. The app shell in `src/runtime/` currently supports:
+
+- elapsed or countdown timer
+- Quake-style terminal opened with the backquote/tilde key
+
+The runtime shell wraps the selected deck in `src/App.tsx`, so its state survives Spectacle slide changes. Keep this layer lightweight and presenter-focused. Deck-specific runtime needs should start in deck config before becoming shared runtime features.
+
 ## Remotion Boundary
 
 Remotion animation should be driven by frame state: `useCurrentFrame()`, `useVideoConfig()`, `interpolate()`, `spring()`, `Sequence`, and media primitives from Remotion.
