@@ -1,0 +1,4 @@
+version: "1"
+name: prezzo-deck
+description: Build Prezzo React decks with Spectacle, Motion, and Remotion.
+default_prompt: "Create or revise a Prezzo presentation deck using the project guidance in AGENTS.md and the prezzo-deck skill."

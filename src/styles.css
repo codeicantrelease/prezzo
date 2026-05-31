@@ -1,0 +1,98 @@
+:root {
+  color: #101418;
+  background: #f8f3e7;
+  font-family: Inter, "Avenir Next", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.slide-shell {
+  width: 100%;
+  height: 100%;
+  padding: 72px;
+  position: relative;
+}
+
+.kicker {
+  color: #1f6f62;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.deck-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(16, 20, 24, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(16, 20, 24, 0.16);
+}
+
+.glass-dark {
+  background: rgba(16, 20, 24, 0.9);
+  border: 1px solid rgba(248, 243, 231, 0.16);
+  border-radius: 8px;
+  color: #f8f3e7;
+}
+
+.media-stage {
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(255, 90, 54, 0.9), rgba(31, 157, 136, 0.82)),
+    radial-gradient(circle at 18% 18%, rgba(248, 243, 231, 0.7), transparent 28%);
+}
+
+.media-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(248, 243, 231, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(248, 243, 231, 0.12) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.template-bar {
+  align-items: center;
+  bottom: 28px;
+  color: rgba(248, 243, 231, 0.9);
+  display: flex;
+  font-size: 18px;
+  gap: 14px;
+  justify-content: space-between;
+  left: 42px;
+  position: absolute;
+  right: 42px;
+}
+
+.template-bar > span {
+  align-items: center;
+  background: rgba(16, 20, 24, 0.78);
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 8px;
+  display: inline-flex;
+  min-height: 38px;
+  padding: 8px 12px;
+}

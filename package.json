@@ -1,0 +1,41 @@
+{
+  "name": "prezzo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "React-native presentation lab for live decks, rendered video moments, and agent-driven storytelling.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "studio": "remotion studio src/remotion/index.ts",
+    "render": "remotion render src/remotion/index.ts PrezzoDemo out/prezzo-demo.mp4",
+    "check": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@remotion/player": "^4.0.469",
+    "lucide-react": "^1.17.0",
+    "motion": "^12.40.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.8.1",
+    "remotion": "^4.0.469",
+    "spectacle": "^10.2.3"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.469",
+    "@types/react": "^18.3.29",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.2"
+  },
+  "overrides": {
+    "@babel/runtime": "^7.29.7",
+    "prismjs": "^1.30.0",
+    "trim": "0.0.3"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}
