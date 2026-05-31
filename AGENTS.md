@@ -83,6 +83,7 @@ Remotion sets the baseline for programmatic video creation. Prezzo should use it
 - Keep deck code under `decks/<slug>/`.
 - Keep reusable pieces under `src/components/` and shared runtime files under `src/`.
 - Register every deck in `src/deck-registry.ts`.
+- Treat runtime chrome as deck opt-in. Timers and the Quake terminal live under `src/runtime/` and should be enabled from `deck.config.ts` only when useful.
 - Put deck-specific Remotion scenes under `decks/<slug>/remotion/`; keep the Remotion root under `src/remotion/`.
 - Keep generated or heavyweight media out of git unless it is small, source-controlled, and clearly needed.
 - Put deck-local media in `decks/<slug>/assets/` and document its origin or license.

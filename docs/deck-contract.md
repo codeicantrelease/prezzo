@@ -16,6 +16,7 @@ decks/<deck-slug>/
 ```
 
 - `deck.config.ts` registers the deck slug, label, browser component, slide count, and optional Remotion composition.
+- `runtime` in `deck.config.ts` opts the deck into persistent presentation UI such as timers and the Quake terminal.
 - `Deck.tsx` is the live Spectacle deck.
 - `notes.md` holds the brief, run of show, style-guide reference, assumptions, and QA notes.
 - `assets/` holds deck-local screenshots, clips, GIFs, audio, and generated images.
@@ -65,6 +66,47 @@ A style guide can be a local markdown file, design export, screenshot folder, br
 
 If the style guide conflicts with presentation readability, readability wins. Explain the deviation in `notes.md`.
 
+## Runtime Chrome
+
+Runtime chrome is opt-in per deck. Enable it in `deck.config.ts`:
+
+```ts
+runtime: {
+  timer: {
+    enabled: true,
+    mode: "elapsed",
+  },
+  terminal: {
+    enabled: true,
+  },
+}
+```
+
+The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide.
+
+The Quake terminal is bound to the backquote/tilde key. Press:
+
+- `` ` `` to open or close the terminal
+- `Esc` to close it
+
+Starter commands:
+
+```text
+help
+deck
+timer
+timer pause
+timer resume
+timer reset
+timer elapsed
+timer countdown 20m
+goto 3
+clear
+close
+```
+
+Keep runtime chrome presenter-focused. Do not enable it for a deck unless the deck actually benefits from live controls, timing, debug/status overlays, or command interaction.
+
 ## Visual QA
 
 Agents must inspect settled screenshots for every changed slide. Treat these as fixable test failures:
@@ -75,6 +117,7 @@ Agents must inspect settled screenshots for every changed slide. Treat these as 
 - unreadable chart labels
 - overlapping media and copy
 - animation end states that cover the main message
+- runtime chrome that obscures the slide content
 
 Do not hand off a deck after merely noticing these issues. Fix obvious defects, re-run `npm run check`, and re-capture affected slides.
 

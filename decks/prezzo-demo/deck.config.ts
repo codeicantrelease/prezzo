@@ -8,6 +8,15 @@ export const deckConfig = {
   description: "Starter deck showing the live Spectacle and rendered Remotion paths.",
   slideCount: 5,
   component: PrezzoDeck,
+  runtime: {
+    timer: {
+      enabled: true,
+      mode: "elapsed",
+    },
+    terminal: {
+      enabled: true,
+    },
+  },
   remotion: {
     id: "prezzo-demo",
     component: DeckVideo,
