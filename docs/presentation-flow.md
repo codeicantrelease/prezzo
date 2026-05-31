@@ -28,10 +28,11 @@ Agents should not begin by spraying JSX. Use this sequence:
 2. Spine: one-sentence thesis and 3-5 section beats.
 3. Run of show: slide-by-slide outline with purpose, visual approach, and presenter note.
 4. Asset plan: screenshots, clips, generated images, charts, data, icons, and videos.
-5. Build: implement the deck in React, adding reusable components when patterns repeat.
-6. Inspect: run locally, capture screenshots, check text fit, console errors, and navigation.
-7. Render: create Remotion compositions for hero sequences or export inserts.
-8. Tighten: remove cleverness that does not advance the story.
+5. Create: use `npm run deck:new -- <slug> --style-guide /path/to/style-guide` when starting a new presentation.
+6. Build: implement the deck in React, adding reusable components when patterns repeat.
+7. Inspect: run locally, capture screenshots, check text fit, console errors, and navigation.
+8. Render: create Remotion compositions for hero sequences or export inserts.
+9. Tighten: remove cleverness that does not advance the story.
 
 The inspect step is mandatory. Agents should capture actual slide screenshots after animations settle, review them for contrast, clipping, overlap, hidden navigation chrome, illegible chart labels, and media/caption readability, then auto-correct obvious defects before handing the deck back.
 
@@ -47,6 +48,18 @@ A strong Prezzo deck should usually contain:
 - Decision: what the audience should do next.
 
 Each slide should have a job. If a slide is only decorative, cut it or turn it into a transition moment.
+
+## Multi-Deck Workflow
+
+Prezzo is a deck workspace, not a single deck. Agents should create a new folder under `decks/` for each presentation and keep the brief, assets, QA notes, and Remotion scenes with that deck.
+
+Selection paths:
+
+- CLI: `npm run dev -- <slug>`
+- Browser: `http://127.0.0.1:5173/<slug>`
+- Render: `npm run render -- <slug>`
+
+Use [deck-contract.md](deck-contract.md) as the source of truth for the deck directory shape.
 
 ## Wow Factor Menu
 

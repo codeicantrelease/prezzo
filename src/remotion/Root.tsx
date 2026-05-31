@@ -1,19 +1,27 @@
 import { Composition } from "remotion";
-import { DeckVideo } from "./DeckVideo";
+import { deckConfigs } from "../deck-registry";
 
 export function RemotionRoot() {
   return (
-    <Composition
-      id="PrezzoDemo"
-      component={DeckVideo}
-      durationInFrames={210}
-      fps={30}
-      width={1920}
-      height={1080}
-      defaultProps={{
-        title: "Prezzo",
-        subtitle: "React decks with a render button",
-      }}
-    />
+    <>
+      {deckConfigs
+        .filter((deck) => deck.remotion)
+        .map((deck) => {
+          const remotion = deck.remotion!;
+
+          return (
+            <Composition
+              component={remotion.component}
+              defaultProps={remotion.defaultProps}
+              durationInFrames={remotion.durationInFrames}
+              fps={remotion.fps}
+              height={remotion.height}
+              id={remotion.id}
+              key={remotion.id}
+              width={remotion.width}
+            />
+          );
+        })}
+    </>
   );
 }

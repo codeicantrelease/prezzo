@@ -1,0 +1,31 @@
+{
+  "name": "Prezzo",
+  "description": "Agent-native React presentation lab for live Spectacle decks and rendered Remotion scenes.",
+  "deckDirectory": "decks",
+  "registry": "src/deck-registry.ts",
+  "defaultDeck": "prezzo-demo",
+  "commands": {
+    "list": "npm run deck:list",
+    "new": "npm run deck:new -- <slug> [--style-guide /path/to/style-guide]",
+    "dev": "npm run dev -- <slug>",
+    "studio": "npm run studio -- <slug>",
+    "render": "npm run render -- <slug>",
+    "qa": "npm run deck:qa -- <slug>",
+    "check": "npm run check"
+  },
+  "deckShape": [
+    "decks/<slug>/deck.config.ts",
+    "decks/<slug>/Deck.tsx",
+    "decks/<slug>/notes.md",
+    "decks/<slug>/assets/",
+    "decks/<slug>/qa/",
+    "decks/<slug>/remotion/"
+  ],
+  "docs": {
+    "agents": "AGENTS.md",
+    "deckContract": "docs/deck-contract.md",
+    "technicalDirection": "docs/technical-direction.md",
+    "presentationFlow": "docs/presentation-flow.md",
+    "projectSkill": "skills/prezzo-deck/SKILL.md"
+  }
+}
