@@ -82,9 +82,9 @@ runtime: {
 }
 ```
 
-The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide.
+The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide. It is intentionally hidden during normal presenting and appears inside the terminal chrome when the terminal is open.
 
-The Quake terminal is bound to the backquote/tilde key. Press:
+The Quake terminal has no visible handle by default. It is bound to the backquote/tilde key. Press:
 
 - `` ` `` to open or close the terminal
 - `Esc` to close it
