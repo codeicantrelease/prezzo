@@ -14,12 +14,11 @@ import {
 } from "spectacle";
 import { InsightChart } from "../../src/components/InsightChart";
 import { MotionBadge } from "../../src/components/MotionBadge";
-import { Template } from "../../src/components/Template";
 import { prezzoTheme } from "../../src/theme";
 
 export function PrezzoDeck() {
   return (
-    <Deck theme={prezzoTheme} template={Template}>
+    <Deck theme={prezzoTheme}>
       <Slide backgroundColor="#101418">
         <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
           <Text className="kicker" color="#f3b23a">

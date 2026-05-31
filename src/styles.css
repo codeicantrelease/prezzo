@@ -256,24 +256,6 @@ select {
   width: 76px;
 }
 
-.focus-timer-overlay__face::before,
-.focus-timer-overlay__face::after {
-  background: rgba(16, 20, 24, 0.22);
-  border-radius: 999px;
-  content: "";
-  height: 4px;
-  left: 50%;
-  position: absolute;
-  top: 7px;
-  transform: translateX(-50%);
-  width: 2px;
-}
-
-.focus-timer-overlay__face::after {
-  bottom: 9px;
-  top: auto;
-}
-
 .focus-timer-overlay__face strong {
   color: #101418;
   font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
@@ -379,27 +361,4 @@ select {
     linear-gradient(rgba(248, 243, 231, 0.12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(248, 243, 231, 0.12) 1px, transparent 1px);
   background-size: 42px 42px;
-}
-
-.template-bar {
-  align-items: center;
-  bottom: 28px;
-  color: rgba(248, 243, 231, 0.9);
-  display: flex;
-  font-size: 18px;
-  gap: 14px;
-  justify-content: space-between;
-  left: 42px;
-  position: absolute;
-  right: 42px;
-}
-
-.template-bar > span {
-  align-items: center;
-  background: rgba(16, 20, 24, 0.78);
-  border: 1px solid rgba(248, 243, 231, 0.14);
-  border-radius: 8px;
-  display: inline-flex;
-  min-height: 38px;
-  padding: 8px 12px;
 }
