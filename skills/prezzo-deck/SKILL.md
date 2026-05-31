@@ -12,23 +12,26 @@ Use this skill when creating or revising a deck in the Prezzo repo.
 1. Read `AGENTS.md`, `docs/technical-direction.md`, and `docs/presentation-flow.md`.
 2. Collect the audience, duration, objective, source material, and desired tone.
 3. Draft the run of show before editing code.
-4. Decide slide-by-slide whether each moment is:
+4. If creating a new deck, run `npm run deck:new -- <slug> --style-guide /path/to/style-guide` when a style guide exists.
+5. Decide slide-by-slide whether each moment is:
    - static Spectacle slide
    - Spectacle slide with Motion reveal
    - live React component or chart
    - embedded media
    - Remotion-rendered sequence
-5. Implement the deck in `src/Deck.tsx` and reusable pieces in `src/components/`.
-6. Put rendered compositions in `src/remotion/`.
-7. Keep local media in `public/assets/` and document source or generation details.
-8. Run `npm run check`.
-9. Inspect the live deck in a browser by capturing settled screenshots for every changed slide.
-10. Fix layout, overlap, contrast, clipping, invisible controls, and console errors.
-11. Run `npm run render` when Remotion timing or composition output changed.
+6. Implement the deck in `decks/<slug>/Deck.tsx` and reusable pieces in `src/components/`.
+7. Put rendered compositions in `decks/<slug>/remotion/`.
+8. Keep local media in `decks/<slug>/assets/` and document source or generation details.
+9. Run `npm run check`.
+10. Inspect the live deck in a browser by capturing settled screenshots for every changed slide.
+11. Fix layout, overlap, contrast, clipping, invisible controls, and console errors.
+12. Run `npm run render -- <slug>` when Remotion timing or composition output changed.
 
 ## Deck Rules
 
 - Start with the deck itself; do not build a marketing landing page.
+- Keep every presentation as a first-class directory under `decks/<slug>/`.
+- Register every new deck in `src/deck-registry.ts`.
 - Make every slide answer "what should the audience understand now?"
 - Use presenter notes for intent, timing, and spoken transitions.
 - Use Motion for live browser energy, not for deterministic video timing.
@@ -40,7 +43,7 @@ Use this skill when creating or revising a deck in the Prezzo repo.
 ## Done Means
 
 - `npm run check` passes.
-- The deck loads locally.
+- The deck loads locally with `npm run dev -- <slug>`.
 - Keyboard navigation works.
 - Text is readable and not overlapping.
 - Screenshots have been reviewed after animations settle.

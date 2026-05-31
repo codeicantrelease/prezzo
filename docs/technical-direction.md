@@ -6,12 +6,14 @@ This document records the project-level technical decisions for Prezzo. It compl
 
 Prezzo has two runtime paths:
 
-1. Live deck path: Vite + React + Spectacle in `src/Deck.tsx`.
+1. Live deck path: Vite + React + Spectacle in `decks/<slug>/Deck.tsx`.
 2. Rendered video path: Remotion entry point in `src/remotion/index.ts`.
 
 The live deck optimizes for presenter navigation, progressive reveals, notes, embedded media, and fast local iteration. The Remotion path optimizes for deterministic frame timing and video export.
 
 Shared visual primitives belong in `src/components/` only when they work in both contexts or can degrade cleanly. If a component depends on browser interaction, navigation state, or non-deterministic animation timing, keep it in the live deck path.
+
+Deck metadata lives in `decks/<slug>/deck.config.ts` and is registered in `src/deck-registry.ts`. Read [deck-contract.md](deck-contract.md) before changing this shape.
 
 ## Tooling Defaults
 
@@ -29,6 +31,17 @@ Current package versions were checked on 2026-05-31 with `npm view`:
 
 Use `npm install` and `npm run check` as the default setup and verification path.
 
+Deck commands:
+
+```bash
+npm run deck:list
+npm run deck:new -- <slug> [--style-guide /path/to/style-guide]
+npm run dev -- <slug>
+npm run studio -- <slug>
+npm run render -- <slug>
+npm run deck:qa -- <slug>
+```
+
 The repo includes `.npmrc` with `legacy-peer-deps=true` because Spectacle depends on the older `react-spring` meta package. Without that setting, npm auto-installs unnecessary optional peer trees such as React Native and Three packages and emits misleading engine warnings.
 
 The `overrides` block patches Spectacle transitive audit findings for `@babel/runtime`, `prismjs`, and `trim` without forcing a breaking downgrade of Spectacle.
@@ -38,7 +51,7 @@ The `overrides` block patches Spectacle transitive audit findings for `@babel/ru
 - `spectacle`: Live slide deck, navigation, presenter notes, progressive reveals, and slide templates.
 - `motion`: Browser animation for live slides. Prefer restrained transitions, gesture affordances, and rich reveal moments.
 - `remotion`: Deterministic frame-based video rendering for openers, explainers, title sequences, exportable GIF/video inserts, and social clips.
-- `@remotion/cli`: Local commands for Remotion Studio and rendering.
+- `@remotion/cli`: Local commands for Remotion Studio and rendering. Invoked through `scripts/prezzo.mjs` so deck slugs map to composition ids.
 - `@remotion/player`: Future option for embedding Remotion previews inside the live React app.
 - `recharts`: Starter charting library for data-driven presentation examples.
 - `lucide-react`: Icon set for presentation UI and diagram primitives.
@@ -53,7 +66,7 @@ Remotion licensing is not plain MIT. The official docs state that Remotion is fr
 
 ## Presentation Assets
 
-Use `public/assets/` for local videos, GIFs, images, audio, and generated media. Add a short note beside any non-trivial asset naming:
+Use `decks/<slug>/assets/` for deck-local videos, GIFs, images, audio, and generated media. Add a short note beside any non-trivial asset naming:
 
 - source or generation prompt
 - license/usage rights
@@ -67,12 +80,13 @@ Large exports belong in `out/`, which is ignored by git.
 Agents creating a new deck should:
 
 1. Capture the audience, objective, duration, and desired feeling.
-2. Draft a run of show before coding slides.
-3. Identify which moments need static slides, live React components, embedded media, or Remotion render.
-4. Implement slide components with stable dimensions and readable hierarchy.
-5. Run `npm run check`.
-6. Inspect the deck visually in a browser.
-7. Render Remotion only when timing or export output changed.
+2. Create the deck with `npm run deck:new -- <slug> --style-guide /path/to/style-guide` when a style guide exists.
+3. Draft a run of show in `decks/<slug>/notes.md` before coding slides.
+4. Identify which moments need static slides, live React components, embedded media, or Remotion render.
+5. Implement slide components with stable dimensions and readable hierarchy.
+6. Run `npm run check`.
+7. Inspect the deck visually in a browser.
+8. Render Remotion only when timing or export output changed.
 
 The local project skill at [../skills/prezzo-deck/SKILL.md](../skills/prezzo-deck/SKILL.md) encodes this workflow for future agents.
 

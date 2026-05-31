@@ -8,15 +8,18 @@ The goal is to make high-impact technical and product storytelling easier for ag
 
 This is a greenfield starter repo under `/Users/duane/Documents/code/duaneedwards/prezzo`, intended for a future private GitHub repo under `duaneedwards/prezzo`.
 
-The first version is a runnable Vite React app with:
+The current version is a runnable multi-deck Vite React app with:
 
 - Spectacle for the live browser deck.
 - Motion for in-deck animation.
 - Recharts for graph examples.
 - Remotion for rendered video compositions.
+- First-class deck directories under `decks/`.
+- A deck registry in `src/deck-registry.ts`.
+- A small CLI in `scripts/prezzo.mjs`.
 - A project-level skill at `skills/prezzo-deck/SKILL.md`.
 
-Read [docs/technical-direction.md](docs/technical-direction.md) before changing architecture. Read [docs/presentation-flow.md](docs/presentation-flow.md) before designing deck workflow or agent automation.
+Read [docs/deck-contract.md](docs/deck-contract.md) before creating or moving decks. Read [docs/technical-direction.md](docs/technical-direction.md) before changing architecture. Read [docs/presentation-flow.md](docs/presentation-flow.md) before designing deck workflow or agent automation.
 
 ## Some Thoughts From The Author
 
@@ -27,7 +30,7 @@ Treat "wow factor" as clarity with timing. A talk should still have rhythm, rest
 ## Product Principles
 
 1. Make the first screen the deck, not a landing page.
-   The repo exists to create presentations, so `npm run dev` should put a usable deck in front of the author immediately.
+   The repo exists to create presentations, so `npm run dev -- <slug>` should put a usable deck in front of the author immediately.
 
 2. Keep live and rendered modes distinct.
    Spectacle is for presenting and navigating. Remotion is for deterministic video output. Share visual primitives where sensible, but do not force one runtime to pretend to be the other.
@@ -54,6 +57,7 @@ v0 should prove:
 - A live Spectacle deck can be authored as normal React.
 - A Remotion composition can render a polished video opener or hero insert.
 - Future agents have enough guidance to create a new deck without asking basic stack questions.
+- Multiple decks can live in the same repo and be selected from the CLI or URL.
 - The workflow supports charts, animation, presenter notes, and local media.
 
 v0 should not become:
@@ -76,10 +80,12 @@ Remotion sets the baseline for programmatic video creation. Prezzo should use it
 
 - Use `npm` unless the repo deliberately changes package manager; `pnpm` is not assumed to be installed on this machine.
 - Keep `.npmrc` with `legacy-peer-deps=true`; Spectacle pulls older React presentation dependencies whose optional peer trees are noisy and unnecessary for this app.
-- Keep deck code in `src/Deck.tsx` and reusable pieces under `src/components/` until the project grows enough to justify a richer package layout.
-- Put Remotion-only entry points under `src/remotion/`.
+- Keep deck code under `decks/<slug>/`.
+- Keep reusable pieces under `src/components/` and shared runtime files under `src/`.
+- Register every deck in `src/deck-registry.ts`.
+- Put deck-specific Remotion scenes under `decks/<slug>/remotion/`; keep the Remotion root under `src/remotion/`.
 - Keep generated or heavyweight media out of git unless it is small, source-controlled, and clearly needed.
-- Put local media in `public/assets/` and document its origin or license.
+- Put deck-local media in `decks/<slug>/assets/` and document its origin or license.
 - Do not commit private client data, unreleased product screenshots, credentials, or paid stock assets without explicit permission.
 - If you add an external service, model, asset provider, or paid dependency, document the date checked and the URL in `docs/technical-direction.md`.
 - If a deck relies on remote media, provide a local fallback or call out the risk in the deck notes.
@@ -90,6 +96,14 @@ For code changes, run:
 
 ```bash
 npm run check
+```
+
+For deck creation and selection:
+
+```bash
+npm run deck:list
+npm run deck:new -- <slug> --style-guide /path/to/style-guide
+npm run dev -- <slug>
 ```
 
 For deck or visual changes, also run the dev server and inspect the deck in a browser. Check at least:
@@ -107,16 +121,18 @@ If a visual review surfaces a clear defect such as white-on-white text, clipped 
 For Remotion changes, run:
 
 ```bash
-npm run studio
+npm run studio -- <slug>
 ```
 
-Use `npm run render` when the change affects exported video timing, dimensions, or composition structure.
+Use `npm run render -- <slug>` when the change affects exported video timing, dimensions, or composition structure.
 
 ## References
 
 - Technical direction: [docs/technical-direction.md](docs/technical-direction.md)
+- Deck contract: [docs/deck-contract.md](docs/deck-contract.md)
 - Presentation flow research: [docs/presentation-flow.md](docs/presentation-flow.md)
 - Project skill: [skills/prezzo-deck/SKILL.md](skills/prezzo-deck/SKILL.md)
+- Agent manifest: [prezzo.json](prezzo.json)
 - Spectacle: https://github.com/FormidableLabs/spectacle
 - Spectacle docs: https://www.formidable.com/open-source/spectacle
 - Remotion docs: https://www.remotiondocs.com/docs

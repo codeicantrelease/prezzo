@@ -12,10 +12,10 @@ import {
   Text,
   UnorderedList,
 } from "spectacle";
-import { InsightChart } from "./components/InsightChart";
-import { MotionBadge } from "./components/MotionBadge";
-import { Template } from "./components/Template";
-import { prezzoTheme } from "./theme";
+import { InsightChart } from "../../src/components/InsightChart";
+import { MotionBadge } from "../../src/components/MotionBadge";
+import { Template } from "../../src/components/Template";
+import { prezzoTheme } from "../../src/theme";
 
 export function PrezzoDeck() {
   return (

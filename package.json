@@ -5,11 +5,14 @@
   "type": "module",
   "description": "React-native presentation lab for live decks, rendered video moments, and agent-driven storytelling.",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "deck:list": "node scripts/prezzo.mjs list",
+    "deck:new": "node scripts/prezzo.mjs new",
+    "deck:qa": "node scripts/prezzo.mjs qa",
+    "dev": "node scripts/prezzo.mjs dev",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "studio": "remotion studio src/remotion/index.ts",
-    "render": "remotion render src/remotion/index.ts PrezzoDemo out/prezzo-demo.mp4",
+    "studio": "node scripts/prezzo.mjs studio",
+    "render": "node scripts/prezzo.mjs render",
     "check": "tsc --noEmit && vite build"
   },
   "dependencies": {
