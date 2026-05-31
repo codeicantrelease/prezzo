@@ -82,7 +82,7 @@ runtime: {
 }
 ```
 
-The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide. It is intentionally hidden during normal presenting and appears inside the terminal chrome when the terminal is open.
+The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide. It is intentionally hidden during normal presenting and appears inside the terminal chrome when the terminal is open. A deck can also start a visible clock-style focus countdown from the terminal with `timer start`; it is hidden until that command runs and anchors to the active presentation frame.
 
 The Quake terminal has no visible handle by default. It is bound to the backquote/tilde key. Press:
 
@@ -94,7 +94,14 @@ Starter commands:
 ```text
 help
 deck
+vim
+vim on
+vim off
 timer
+timer 2m
+timer start
+timer start 90s
+timer stop
 timer pause
 timer resume
 timer reset
@@ -106,6 +113,10 @@ close
 ```
 
 Keep runtime chrome presenter-focused. Do not enable it for a deck unless the deck actually benefits from live controls, timing, debug/status overlays, or command interaction.
+
+`timer start` launches a visible 120-second clock countdown overlay by default. Pass a duration such as `timer start 45s` or `timer start 2m` when a slide moment needs a different countdown. The shorter `timer 2m` form does the same thing. Use `timer stop` to hide the overlay.
+
+The terminal defaults to vim input mode and shows a right-aligned input-line status with a Vim mark plus `NORMAL`, `INSERT`, or `OFF`. `Esc` enters normal mode when the terminal input is focused. In normal mode, `i`, `a`, `I`, and `A` return to insert mode; `h`, `l`, `w`, `b`, `e`, `0`, `$`, and `x` edit the command line; `dw`, `db`, `de`, `d$`, `d0`, and `dd` delete by motion; and `j`/`k` cycle command history. Use `vim off` for presenters who prefer standard input behavior and `vim on` to re-enable it.
 
 ## Visual QA
 

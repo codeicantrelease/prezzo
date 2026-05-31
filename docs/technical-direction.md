@@ -62,8 +62,9 @@ Decks can opt into persistent runtime UI through `deck.config.ts`. The app shell
 
 - elapsed or countdown timer
 - Quake-style terminal opened with the backquote/tilde key
+- command-started focus countdown overlay for timed audience moments
 
-The runtime shell wraps the selected deck in `src/App.tsx`, so its state survives Spectacle slide changes. Runtime UI should stay hidden during normal presenting unless the user opens it. The timer currently appears inside the terminal chrome rather than as always-visible slide chrome. Keep this layer lightweight and presenter-focused. Deck-specific runtime needs should start in deck config before becoming shared runtime features.
+The runtime shell wraps the selected deck in `src/App.tsx`, so its state survives Spectacle slide changes. Runtime UI should stay hidden during normal presenting unless the user opens it or triggers it with an explicit terminal command. The standard timer appears inside the terminal chrome, while `timer start` shows a top-right focus countdown overlay for the current live moment. Keep this layer lightweight and presenter-focused. Deck-specific runtime needs should start in deck config before becoming shared runtime features.
 
 ## Remotion Boundary
 

@@ -26,6 +26,11 @@ select {
   font: inherit;
 }
 
+.presentation-focus-sentinel {
+  min-height: 100vh;
+  outline: none;
+}
+
 .deck-index {
   background: #101418;
   color: #f8f3e7;
@@ -91,24 +96,29 @@ select {
 }
 
 .quake-terminal {
-  background: rgba(10, 13, 16, 0.96);
-  border-bottom: 1px solid rgba(248, 243, 231, 0.16);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  background: #0a0d10;
+  border-bottom: 1px solid rgba(248, 243, 231, 0.22);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.58),
+    0 1px 0 rgba(248, 243, 231, 0.08) inset;
   color: #f8f3e7;
   display: grid;
   font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
   grid-template-rows: auto 1fr auto;
+  height: min(360px, 48vh);
+  isolation: isolate;
   left: 0;
   min-height: 280px;
+  overflow: hidden;
   position: fixed;
   right: 0;
   top: 0;
   transform: translateY(-102%);
   transition: transform 160ms ease-out;
-  z-index: 3000;
+  z-index: 10000;
 }
 
-.quake-terminal--open {
+.quake-terminal.quake-terminal--open {
   transform: translateY(0);
 }
 
@@ -117,7 +127,7 @@ select {
   border-bottom: 1px solid rgba(248, 243, 231, 0.12);
   display: grid;
   gap: 14px;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto;
   padding: 14px 18px;
 }
 
@@ -125,9 +135,48 @@ select {
   color: #f3b23a;
 }
 
-.quake-terminal__bar span {
+.quake-terminal__bar > span {
   color: rgba(248, 243, 231, 0.6);
   justify-self: end;
+}
+
+.quake-terminal__vim-mode {
+  align-items: center;
+  color: rgba(248, 243, 231, 0.68);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 7px;
+  letter-spacing: 0;
+  min-width: 88px;
+  text-transform: uppercase;
+}
+
+.quake-terminal__vim-mode--active {
+  color: #f3b23a;
+}
+
+.quake-terminal__vim-icon {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  height: 18px;
+  justify-content: center;
+  line-height: 1;
+  transform: skew(-8deg);
+  width: 18px;
+}
+
+.quake-terminal__input--vim-normal {
+  caret-color: transparent;
+}
+
+.quake-terminal__input--vim-normal::selection {
+  background: #f3b23a;
+  color: #101418;
 }
 
 .runtime-timer strong {
@@ -143,11 +192,106 @@ select {
   text-transform: uppercase;
 }
 
+.quake-terminal__input-status .runtime-timer {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: rgba(248, 243, 231, 0.66);
+  gap: 8px;
+  padding: 0;
+}
+
+.quake-terminal__input-status .runtime-timer strong {
+  color: rgba(248, 243, 231, 0.86);
+  font-size: 13px;
+}
+
+.quake-terminal__input-status .runtime-timer span {
+  color: rgba(248, 243, 231, 0.5);
+  font-size: 11px;
+}
+
 .runtime-timer--overtime {
   border-color: rgba(255, 90, 54, 0.72);
 }
 
 .runtime-timer--overtime strong {
+  color: #ff5a36;
+}
+
+.focus-timer-overlay {
+  align-items: center;
+  color: #101418;
+  display: flex;
+  justify-items: center;
+  pointer-events: none;
+  position: fixed;
+  right: var(--focus-timer-right, 24px);
+  top: var(--focus-timer-top, 24px);
+  z-index: 2200;
+}
+
+.focus-timer-overlay__clock {
+  background: conic-gradient(
+    from 0deg,
+    rgba(248, 243, 231, 0.88) var(--focus-timer-progress),
+    rgba(248, 243, 231, 0.2) 0
+  );
+  border-radius: 999px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  padding: 2px;
+}
+
+.focus-timer-overlay__face {
+  align-items: center;
+  backdrop-filter: blur(18px);
+  background: rgba(248, 243, 231, 0.78);
+  border: 1px solid rgba(248, 243, 231, 0.42);
+  border-radius: 999px;
+  display: grid;
+  height: 76px;
+  isolation: isolate;
+  justify-items: center;
+  position: relative;
+  width: 76px;
+}
+
+.focus-timer-overlay__face::before,
+.focus-timer-overlay__face::after {
+  background: rgba(16, 20, 24, 0.22);
+  border-radius: 999px;
+  content: "";
+  height: 4px;
+  left: 50%;
+  position: absolute;
+  top: 7px;
+  transform: translateX(-50%);
+  width: 2px;
+}
+
+.focus-timer-overlay__face::after {
+  bottom: 9px;
+  top: auto;
+}
+
+.focus-timer-overlay__face strong {
+  color: #101418;
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  z-index: 1;
+}
+
+.focus-timer-overlay--expired {
+  color: #ff5a36;
+}
+
+.focus-timer-overlay--expired .focus-timer-overlay__clock {
+  background: conic-gradient(from 0deg, rgba(255, 90, 54, 0.72) 100%, rgba(248, 243, 231, 0.18) 0);
+}
+
+.focus-timer-overlay--expired .focus-timer-overlay__face strong {
   color: #ff5a36;
 }
 
@@ -164,8 +308,8 @@ select {
   align-items: center;
   border-top: 1px solid rgba(248, 243, 231, 0.12);
   display: grid;
-  gap: 10px;
-  grid-template-columns: auto 1fr;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   padding: 14px 18px 18px;
 }
 
@@ -179,6 +323,14 @@ select {
   color: #f8f3e7;
   outline: 0;
   width: 100%;
+}
+
+.quake-terminal__input-status {
+  align-items: center;
+  display: inline-flex;
+  gap: 14px;
+  justify-content: end;
+  white-space: nowrap;
 }
 
 .slide-shell {
