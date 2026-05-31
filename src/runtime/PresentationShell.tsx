@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { DeckConfig } from "../deck-types";
 import { QuakeTerminal } from "./QuakeTerminal";
-import { RuntimeTimer } from "./RuntimeTimer";
 
 export type TimerMode = "elapsed" | "countdown";
 
@@ -116,10 +115,10 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
   return (
     <>
       {children}
-      {hasTimer ? <RuntimeTimer state={timerState} /> : null}
       {hasTerminal ? (
         <QuakeTerminal
           deck={deck}
+          hasTimer={hasTimer}
           isOpen={isTerminalOpen}
           onClose={() => setIsTerminalOpen(false)}
           onOpen={() => setIsTerminalOpen(true)}

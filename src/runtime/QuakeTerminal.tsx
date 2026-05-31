@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { DeckConfig } from "../deck-types";
 import type { TimerControls, TimerState } from "./PresentationShell";
+import { RuntimeTimer } from "./RuntimeTimer";
 
 type QuakeTerminalProps = {
   deck: DeckConfig;
+  hasTimer: boolean;
   isOpen: boolean;
   onClose: () => void;
   onOpen: () => void;
@@ -41,6 +43,7 @@ function goToSlide(slide: number) {
 
 export function QuakeTerminal({
   deck,
+  hasTimer,
   isOpen,
   onClose,
   onOpen,
@@ -156,35 +159,31 @@ export function QuakeTerminal({
   };
 
   return (
-    <>
-      <button className="quake-terminal-handle" onClick={onOpen} type="button">
-        `
-      </button>
-      <section className={`quake-terminal ${isOpen ? "quake-terminal--open" : ""}`} aria-hidden={!isOpen}>
-        <div className="quake-terminal__bar">
-          <strong>Prezzo terminal</strong>
-          <span>{deck.slug}</span>
-        </div>
-        <div className="quake-terminal__history">
-          {history.map((line, index) => (
-            <div key={`${line}-${index}`}>{line}</div>
-          ))}
-        </div>
-        <form className="quake-terminal__form" onSubmit={onSubmit}>
-          <span>&gt;</span>
-          <input
-            aria-label="Prezzo terminal command"
-            autoCapitalize="off"
-            autoComplete="off"
-            autoCorrect="off"
-            onChange={(event) => setCommand(event.target.value)}
-            onKeyDown={onInputKeyDown}
-            ref={inputRef}
-            spellCheck={false}
-            value={command}
-          />
-        </form>
-      </section>
-    </>
+    <section className={`quake-terminal ${isOpen ? "quake-terminal--open" : ""}`} aria-hidden={!isOpen}>
+      <div className="quake-terminal__bar">
+        <strong>Prezzo terminal</strong>
+        {hasTimer ? <RuntimeTimer state={timer} /> : null}
+        <span>{deck.slug}</span>
+      </div>
+      <div className="quake-terminal__history">
+        {history.map((line, index) => (
+          <div key={`${line}-${index}`}>{line}</div>
+        ))}
+      </div>
+      <form className="quake-terminal__form" onSubmit={onSubmit}>
+        <span>&gt;</span>
+        <input
+          aria-label="Prezzo terminal command"
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+          onChange={(event) => setCommand(event.target.value)}
+          onKeyDown={onInputKeyDown}
+          ref={inputRef}
+          spellCheck={false}
+          value={command}
+        />
+      </form>
+    </section>
   );
 }

@@ -34,6 +34,7 @@ Use this skill when creating or revising a deck in the Prezzo repo.
 - Register every new deck in `src/deck-registry.ts`.
 - Enable runtime chrome only when useful for that deck. Runtime timer and Quake terminal are opt-in through `deck.config.ts`.
 - When terminal is enabled, verify the backquote/tilde shortcut opens it and `Esc` closes it.
+- Runtime chrome should not be visible by default during normal presentation; timer/status UI belongs inside the opened terminal unless the deck explicitly needs persistent visible chrome.
 - Make every slide answer "what should the audience understand now?"
 - Use presenter notes for intent, timing, and spoken transitions.
 - Use Motion for live browser energy, not for deterministic video timing.
