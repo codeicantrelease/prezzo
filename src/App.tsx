@@ -1,12 +1,21 @@
 import { deckConfigs, findDeck, getDeckOrDefault } from "./deck-registry";
+import { DubDubTokChallenge } from "./runtime/DubDubTokChallenge";
 import { PresentationShell } from "./runtime/PresentationShell";
+
+function pathSegmentsFromLocation() {
+  return window.location.pathname.split("/").filter(Boolean);
+}
 
 function selectedDeckSlugFromLocation() {
   const params = new URLSearchParams(window.location.search);
   const queryDeck = params.get("deck");
-  const pathDeck = window.location.pathname.split("/").filter(Boolean)[0];
+  const pathDeck = pathSegmentsFromLocation()[0];
 
   return pathDeck || queryDeck || import.meta.env.VITE_PREZZO_DECK;
+}
+
+function hiddenPageSlugFromLocation() {
+  return pathSegmentsFromLocation()[1];
 }
 
 function DeckIndex() {
@@ -42,6 +51,16 @@ export function App() {
   }
 
   const DeckComponent = getDeckOrDefault(selectedDeck.slug).component;
+  const hiddenPageSlug = hiddenPageSlugFromLocation();
+  const dubdubtokConfig = selectedDeck.runtime?.hiddenPages?.dubdubtok;
+
+  if (hiddenPageSlug === "dubdubtok" && dubdubtokConfig?.enabled) {
+    return (
+      <PresentationShell deck={selectedDeck}>
+        <DubDubTokChallenge config={dubdubtokConfig} deck={selectedDeck} />
+      </PresentationShell>
+    );
+  }
 
   return (
     <PresentationShell deck={selectedDeck}>

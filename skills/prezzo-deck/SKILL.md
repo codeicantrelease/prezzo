@@ -36,6 +36,7 @@ Use this skill when creating or revising a deck in the Prezzo repo.
 - When terminal is enabled, verify the backquote/tilde shortcut opens it and `Esc` closes it.
 - Runtime chrome should not be visible by default during normal presentation; timer/status UI belongs inside the opened terminal unless the presenter starts visible chrome with a command such as `timer start`.
 - If a deck uses the visible focus countdown, verify `timer start` shows the top-right overlay, `timer stop` hides it, and the overlay does not cover important slide content.
+- Hidden pages are app-shell routes, not Spectacle slides. If a deck config enables `runtime.hiddenPages`, verify the terminal command opens the route and the page does not change the deck slide count.
 - The Quake terminal defaults to vim input mode. Verify the input-line vim status is visible, `vim off` restores standard typing, and focused terminal input captures vim keys instead of triggering slide shortcuts.
 - Make every slide answer "what should the audience understand now?"
 - Use presenter notes for intent, timing, and spoken transitions.
