@@ -56,8 +56,16 @@ function formatTimer(timer: TimerState) {
   return `countdown ${Math.floor(remaining / 60)}m ${Math.abs(remaining % 60)}s (${timer.isRunning ? "running" : "paused"})`;
 }
 
-function goToSlide(slide: number) {
+function goToHiddenPage(deckSlug: string, pageSlug: string) {
   const nextUrl = new URL(window.location.href);
+  nextUrl.pathname = `/${deckSlug}/${pageSlug}`;
+  nextUrl.search = "";
+  window.location.assign(nextUrl);
+}
+
+function goToSlide(deckSlug: string, slide: number) {
+  const nextUrl = new URL(window.location.href);
+  nextUrl.pathname = `/${deckSlug}`;
   nextUrl.searchParams.set("slideIndex", String(Math.max(0, slide - 1)));
   nextUrl.searchParams.set("stepIndex", "0");
   window.location.assign(nextUrl);
@@ -253,8 +261,8 @@ export function QuakeTerminal({
       deck: () => `${deck.slug} - ${deck.label}`,
       help: () =>
         hasTimer
-          ? "commands: help, deck, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
-          : "commands: help, deck, vim, vim on, vim off, goto 3, clear, close",
+          ? "commands: help, deck, dubdubtok, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
+          : "commands: help, deck, dubdubtok, vim, vim on, vim off, goto 3, clear, close",
       timer: () => formatTimer(timer),
     }),
     [deck.label, deck.slug, hasTimer, onClose, timer],
@@ -274,11 +282,19 @@ export function QuakeTerminal({
     const [base, ...rest] = input.split(/\s+/);
     let output = "";
 
+    if (base === "dubdubtok") {
+      const page = deck.runtime?.hiddenPages?.dubdubtok;
+      output = page?.enabled ? "opening DubDubTok challenge" : "dubdubtok is not enabled for this deck";
+      setHistory((current) => [...current, `> ${input}`, output]);
+      if (page?.enabled) goToHiddenPage(deck.slug, "dubdubtok");
+      return;
+    }
+
     if (base === "goto") {
       const slide = Number(rest[0]);
       output = Number.isFinite(slide) && slide > 0 ? `going to slide ${slide}` : "usage: goto <slide-number>";
       setHistory((current) => [...current, `> ${input}`, output]);
-      if (Number.isFinite(slide) && slide > 0) goToSlide(slide);
+      if (Number.isFinite(slide) && slide > 0) goToSlide(deck.slug, slide);
       return;
     }
 

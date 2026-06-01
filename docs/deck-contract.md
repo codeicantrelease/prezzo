@@ -72,6 +72,17 @@ Runtime chrome is opt-in per deck. Enable it in `deck.config.ts`:
 
 ```ts
 runtime: {
+  hiddenPages: {
+    dubdubtok: {
+      enabled: true,
+      imageUrl: "/assets/dubdubtok-one-piece-source.webp",
+      sourceAspectRatio: 500 / 282,
+      targetRotationDegrees: 267,
+      targetPercent: 50,
+      targetYPercent: 50,
+      toleranceDegrees: 24,
+    },
+  },
   timer: {
     enabled: true,
     mode: "elapsed",
@@ -84,6 +95,8 @@ runtime: {
 
 The timer persists across Spectacle slide navigation because it lives in the app shell, not inside a slide. It is intentionally hidden during normal presenting and appears inside the terminal chrome when the terminal is open. A deck can also start a visible clock-style focus countdown from the terminal with `timer start`; it is hidden until that command runs and anchors to the active presentation frame.
 
+Hidden pages also live in the app shell and are intentionally outside the Spectacle slide set. The built-in `dubdubtok` hidden page is reachable only by terminal command and renders a DubDubTok-branded rotate-to-match slider challenge. Configure its source image, source aspect ratio, circle position, target rotation, and tolerance in `runtime.hiddenPages.dubdubtok`; keep source images in `public/assets/` or deck-local assets that Vite can serve. By default the outer circle and draggable inner circle are derived from the same `imageUrl`; `pieceImageUrl` is only for pre-cut captcha assets that must be handled separately.
+
 The Quake terminal has no visible handle by default. It is bound to the backquote/tilde key. Press:
 
 - `` ` `` to open or close the terminal
@@ -94,6 +107,7 @@ Starter commands:
 ```text
 help
 deck
+dubdubtok
 vim
 vim on
 vim off

@@ -9,6 +9,17 @@ export const deckConfig = {
   slideCount: 5,
   component: PrezzoDeck,
   runtime: {
+    hiddenPages: {
+      dubdubtok: {
+        enabled: true,
+        imageUrl: "/assets/dubdubtok-one-piece-source.webp",
+        sourceAspectRatio: 500 / 282,
+        targetRotationDegrees: 267,
+        targetPercent: 50,
+        targetYPercent: 50,
+        toleranceDegrees: 24,
+      },
+    },
     timer: {
       enabled: true,
       mode: "elapsed",

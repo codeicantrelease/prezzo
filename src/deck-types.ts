@@ -17,6 +17,18 @@ export type DeckConfig = {
   slideCount?: number;
   component: ComponentType;
   runtime?: {
+    hiddenPages?: {
+      dubdubtok?: {
+        enabled: boolean;
+        imageUrl: string;
+        pieceImageUrl?: string;
+        sourceAspectRatio?: number;
+        targetRotationDegrees?: number;
+        targetPercent?: number;
+        targetYPercent?: number;
+        toleranceDegrees?: number;
+      };
+    };
     timer?: {
       enabled: boolean;
       mode?: "elapsed" | "countdown";
