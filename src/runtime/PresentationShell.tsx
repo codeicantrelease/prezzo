@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import type { DeckConfig } from "../deck-types";
 import { FocusTimerOverlay } from "./FocusTimerOverlay";
 import { QuakeTerminal } from "./QuakeTerminal";
+import { RemoteAccessOverlay } from "./RemoteAccessOverlay";
+import type { RemoteAccessDetails } from "./remote-control";
 
 export type TimerMode = "elapsed" | "countdown";
 
@@ -75,6 +77,7 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [focusDurationSeconds, setFocusDurationSeconds] = useState(120);
   const [focusStartedAt, setFocusStartedAt] = useState<number | null>(null);
+  const [remoteAccess, setRemoteAccess] = useState<RemoteAccessDetails | null>(null);
   const presentationFocusRef = useRef<HTMLDivElement>(null);
 
   const restorePresentationFocus = useCallback(() => {
@@ -216,6 +219,9 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
         {children}
       </div>
       {hasTimer && focusTimerState.isVisible ? <FocusTimerOverlay state={focusTimerState} /> : null}
+      {remoteAccess ? (
+        <RemoteAccessOverlay access={remoteAccess} onClose={() => setRemoteAccess(null)} />
+      ) : null}
       {hasTerminal ? (
         <QuakeTerminal
           deck={deck}
@@ -224,6 +230,10 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
           isOpen={isTerminalOpen}
           onClose={closeTerminal}
           onOpen={() => setIsTerminalOpen(true)}
+          onShowRemoteAccess={(access) => {
+            setRemoteAccess(access);
+            closeTerminal();
+          }}
           timer={timerState}
           timerControls={timerControls}
         />

@@ -1,5 +1,13 @@
 import type { ComponentType } from "react";
 
+export type PrezzoDeckRuntimeProps = {
+  remote?: {
+    enabled: boolean;
+    slideCount?: number;
+    slug: string;
+  };
+};
+
 export type RemotionDeckConfig = {
   id: string;
   component: ComponentType<any>;
@@ -15,7 +23,8 @@ export type DeckConfig = {
   label: string;
   description?: string;
   slideCount?: number;
-  component: ComponentType;
+  presenterNotes?: string[];
+  component: ComponentType<PrezzoDeckRuntimeProps>;
   runtime?: {
     hiddenPages?: {
       dubdubtok?: {

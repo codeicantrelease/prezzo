@@ -1,6 +1,7 @@
 import { deckConfigs, findDeck, getDeckOrDefault } from "./deck-registry";
 import { DubDubTokChallenge } from "./runtime/DubDubTokChallenge";
 import { PresentationShell } from "./runtime/PresentationShell";
+import { RemoteControllerPage } from "./runtime/RemoteControllerPage";
 
 function pathSegmentsFromLocation() {
   return window.location.pathname.split("/").filter(Boolean);
@@ -54,6 +55,10 @@ export function App() {
   const hiddenPageSlug = hiddenPageSlugFromLocation();
   const dubdubtokConfig = selectedDeck.runtime?.hiddenPages?.dubdubtok;
 
+  if (hiddenPageSlug === "control") {
+    return <RemoteControllerPage deck={selectedDeck} />;
+  }
+
   if (hiddenPageSlug === "dubdubtok" && dubdubtokConfig?.enabled) {
     return (
       <PresentationShell deck={selectedDeck}>
@@ -64,7 +69,13 @@ export function App() {
 
   return (
     <PresentationShell deck={selectedDeck}>
-      <DeckComponent />
+      <DeckComponent
+        remote={{
+          enabled: true,
+          slideCount: selectedDeck.slideCount ?? 1,
+          slug: selectedDeck.slug,
+        }}
+      />
     </PresentationShell>
   );
 }
