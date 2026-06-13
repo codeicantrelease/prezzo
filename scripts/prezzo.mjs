@@ -142,13 +142,15 @@ async function createDeck() {
 
   await fs.writeFile(
     path.join(deckPath, "Deck.tsx"),
-    `import { Deck, FlexBox, Heading, Slide, Text } from "spectacle";
+    `import { FlexBox, Heading, Slide, Text } from "spectacle";
 import { Template } from "../../src/components/Template";
+import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
+import { PrezzoSpectacleDeck } from "../../src/runtime/PrezzoSpectacleDeck";
 import { prezzoTheme } from "../../src/theme";
 
-export function ${componentName}() {
+export function ${componentName}({ remote }: PrezzoDeckRuntimeProps) {
   return (
-    <Deck theme={prezzoTheme} template={Template}>
+    <PrezzoSpectacleDeck remote={remote} theme={prezzoTheme} template={Template}>
       <Slide backgroundColor="#101418">
         <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
           <Text className="kicker" color="#f3b23a">
@@ -162,7 +164,7 @@ export function ${componentName}() {
           </Text>
         </FlexBox>
       </Slide>
-    </Deck>
+    </PrezzoSpectacleDeck>
   );
 }
 `,
@@ -211,6 +213,7 @@ export const deckConfig = {
   label: "${label.replaceAll('"', '\\"')}",
   description: "Generated Prezzo deck.",
   slideCount: 1,
+  presenterNotes: ["Opening promise."],
   component: ${componentName},
   remotion: {
     id: "${slug}",
@@ -287,7 +290,7 @@ async function main() {
   if (command === "dev") {
     const slug = toSlug(positional() || "prezzo-demo");
     await assertDeck(slug);
-    run("vite", ["--host", "127.0.0.1"], { VITE_PREZZO_DECK: slug });
+    run("vite", ["--host", "0.0.0.0"], { VITE_PREZZO_DECK: slug });
     return;
   }
 

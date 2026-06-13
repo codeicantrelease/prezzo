@@ -2,7 +2,6 @@ import { Film, Gauge, Sparkles, Wand2 } from "lucide-react";
 import { motion } from "motion/react";
 import {
   Box,
-  Deck,
   FlexBox,
   Grid,
   Heading,
@@ -14,11 +13,13 @@ import {
 } from "spectacle";
 import { InsightChart } from "../../src/components/InsightChart";
 import { MotionBadge } from "../../src/components/MotionBadge";
+import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
+import { PrezzoSpectacleDeck } from "../../src/runtime/PrezzoSpectacleDeck";
 import { prezzoTheme } from "../../src/theme";
 
-export function PrezzoDeck() {
+export function PrezzoDeck({ remote }: PrezzoDeckRuntimeProps) {
   return (
-    <Deck theme={prezzoTheme}>
+    <PrezzoSpectacleDeck remote={remote} theme={prezzoTheme}>
       <Slide backgroundColor="#101418">
         <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
           <Text className="kicker" color="#f3b23a">
@@ -169,6 +170,6 @@ export function PrezzoDeck() {
           </Text>
         </FlexBox>
       </Slide>
-    </Deck>
+    </PrezzoSpectacleDeck>
   );
 }
