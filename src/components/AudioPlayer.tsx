@@ -187,8 +187,13 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
     (value: number) => {
       const audio = audioRef.current;
       if (!audio) return;
-      audio.currentTime = value;
-      setCurrentTime(value);
+      // This path is remote-command driven, so validate and clamp before
+      // writing currentTime to keep playback stable on bad input.
+      if (!Number.isFinite(value)) return;
+      const max = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : Number.MAX_SAFE_INTEGER;
+      const nextTime = Math.max(0, Math.min(value, max));
+      audio.currentTime = nextTime;
+      setCurrentTime(nextTime);
       if (activeRef.current) publishState();
     },
     [publishState],
@@ -204,6 +209,7 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
   const setVolumeTo = useCallback((value: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (!Number.isFinite(value)) return;
     const next = clamp01(value);
     audio.volume = next;
     // Raising the volume implies you want to hear it.
