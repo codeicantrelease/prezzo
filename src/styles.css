@@ -1123,3 +1123,116 @@ select {
 .audio-player--error .audio-player__status {
   color: #ff5a36;
 }
+
+/* Remote controller audio panel */
+.remote-audio {
+  background: rgba(248, 243, 231, 0.06);
+  border: 1px solid rgba(248, 243, 231, 0.16);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.remote-audio__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.remote-audio__meta span {
+  color: rgba(248, 243, 231, 0.55);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.remote-audio__meta strong {
+  color: #f8f3e7;
+  font-size: 20px;
+}
+
+.remote-audio__meta small {
+  color: rgba(248, 243, 231, 0.6);
+  font-size: 14px;
+}
+
+.remote-audio__transport {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.remote-audio__play {
+  align-items: center;
+  background: #f3b23a;
+  border: none;
+  border-radius: 50%;
+  color: #101418;
+  cursor: pointer;
+  display: flex;
+  height: 52px;
+  justify-content: center;
+  width: 52px;
+}
+
+.remote-audio__icon {
+  align-items: center;
+  background: rgba(248, 243, 231, 0.1);
+  border: 1px solid rgba(248, 243, 231, 0.3);
+  border-radius: 50%;
+  color: #f8f3e7;
+  cursor: pointer;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.remote-audio__volume {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.remote-audio__volume button {
+  background: rgba(248, 243, 231, 0.1);
+  border: 1px solid rgba(248, 243, 231, 0.3);
+  border-radius: 10px;
+  color: #f8f3e7;
+  cursor: pointer;
+  font-size: 22px;
+  height: 40px;
+  line-height: 1;
+  width: 44px;
+}
+
+.remote-audio__volume span {
+  color: rgba(248, 243, 231, 0.8);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  text-align: center;
+}
+
+.remote-audio__scrubber {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.remote-audio__scrubber span {
+  color: rgba(248, 243, 231, 0.7);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 44px;
+  text-align: center;
+}
+
+.remote-audio__scrubber input[type="range"] {
+  accent-color: #f3b23a;
+  flex: 1;
+  height: 6px;
+}

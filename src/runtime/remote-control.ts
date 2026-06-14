@@ -1,6 +1,14 @@
-import type { RemoteDeckState } from "./remote-types";
+import type { RemoteAudioState, RemoteDeckState } from "./remote-types";
 
-export type { RemoteDeckState } from "./remote-types";
+export type { RemoteAudioState, RemoteDeckState } from "./remote-types";
+
+export type RemoteAudioCommand = "toggle-play" | "toggle-mute" | "seek" | "volume";
+
+export type RemoteAudioControlMessage = {
+  command: RemoteAudioCommand;
+  type: "audio-control";
+  value?: number;
+};
 
 export type RemoteAccessDetails = {
   controlUrls: string[];
@@ -37,9 +45,26 @@ export type RemoteServerMessage =
       controllers: number;
       presenters: number;
       type: "connections";
+    }
+  | {
+      audio: RemoteAudioState | null;
+      type: "audio-state";
+    }
+  | {
+      command: RemoteAudioCommand;
+      type: "audio-control";
+      value?: number;
     };
 
 export const REMOTE_CONTROLLER_CONNECTED_EVENT = "prezzo:remote-controller-connected";
+
+// Bridge between the slide-local AudioPlayer and the presenter websocket
+// (RemoteDeckBridge), which live in separate component trees. The player
+// dispatches REMOTE_AUDIO_STATE_EVENT (detail: RemoteAudioState) when its
+// playback changes; the bridge forwards remote commands as
+// REMOTE_AUDIO_COMMAND_EVENT (detail: { command, value }).
+export const REMOTE_AUDIO_STATE_EVENT = "prezzo:audio-state";
+export const REMOTE_AUDIO_COMMAND_EVENT = "prezzo:audio-command";
 
 export function remoteWebSocketUrl(deckSlug: string, role: "controller" | "presenter", token?: string) {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";

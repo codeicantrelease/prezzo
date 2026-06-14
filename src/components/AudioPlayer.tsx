@@ -1,5 +1,8 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { SlideContext } from "spectacle";
+import { REMOTE_AUDIO_COMMAND_EVENT, REMOTE_AUDIO_STATE_EVENT } from "../runtime/remote-control";
+import type { RemoteAudioControlMessage, RemoteAudioState } from "../runtime/remote-control";
 
 type AudioPlayerProps = {
   src: string;
@@ -18,12 +21,17 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
 export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [status, setStatus] = useState<PlaybackStatus>("loading");
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
 
   // Spectacle keeps *every* slide's children mounted (each renders into its own
   // portal), so a plain mount effect would autostart on deck load and keep
@@ -32,6 +40,40 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
   // player as always active (usable standalone).
   const slideContext = useContext(SlideContext);
   const isSlideActive = slideContext ? slideContext.isSlideActive : true;
+
+  const activeRef = useRef(isSlideActive);
+  activeRef.current = isSlideActive;
+  const wasActiveRef = useRef(false);
+  const lastPublishedSecondRef = useRef(-1);
+
+  // Publish playback to the remote controller (via a window event that the
+  // presenter websocket bridge forwards). Only the active slide publishes, so
+  // the phone only shows controls for the audio that is actually on screen.
+  const publishState = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const detail: RemoteAudioState = {
+      hasAudio: true,
+      playing: !audio.paused && !audio.ended,
+      muted: audio.muted,
+      volume: audio.volume,
+      currentTime: audio.currentTime,
+      duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+      title,
+      subtitle,
+    };
+
+    window.dispatchEvent(new CustomEvent<RemoteAudioState>(REMOTE_AUDIO_STATE_EVENT, { detail }));
+  }, [subtitle, title]);
+
+  const publishCleared = useCallback(() => {
+    window.dispatchEvent(
+      new CustomEvent<RemoteAudioState>(REMOTE_AUDIO_STATE_EVENT, {
+        detail: { hasAudio: false, playing: false, muted: false, volume: 1, currentTime: 0, duration: 0 },
+      }),
+    );
+  }, []);
 
   // Drive playback off slide activation:
   //  - active + autoStart -> play (audible first, muted fallback that unmutes
@@ -45,8 +87,15 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
       audio.pause();
       audio.currentTime = 0;
       setCurrentTime(0);
+      if (wasActiveRef.current) {
+        wasActiveRef.current = false;
+        publishCleared();
+      }
       return;
     }
+
+    wasActiveRef.current = true;
+    publishState();
 
     if (!autoStart) return;
 
@@ -117,7 +166,7 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
       removeGestureListeners();
       audio.pause();
     };
-  }, [autoStart, isSlideActive]);
+  }, [autoStart, isSlideActive, publishCleared, publishState]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -134,20 +183,55 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
     }
   }, []);
 
-  const onSeek = useCallback((value: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = value;
-    setCurrentTime(value);
-  }, []);
+  const onSeek = useCallback(
+    (value: number) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = value;
+      setCurrentTime(value);
+      if (activeRef.current) publishState();
+    },
+    [publishState],
+  );
 
   const toggleMute = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const next = !audio.muted;
-    audio.muted = next;
-    setMuted(next);
+    audio.muted = !audio.muted;
+    setMuted(audio.muted);
   }, []);
+
+  const setVolumeTo = useCallback((value: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const next = clamp01(value);
+    audio.volume = next;
+    // Raising the volume implies you want to hear it.
+    if (next > 0 && audio.muted) {
+      audio.muted = false;
+      setMuted(false);
+    }
+    setVolume(next);
+  }, []);
+
+  // Respond to remote audio commands, but only on the active slide so a phone
+  // never drives audio that is off screen.
+  useEffect(() => {
+    if (!isSlideActive) return undefined;
+
+    const onCommand = (event: Event) => {
+      const detail = (event as CustomEvent<RemoteAudioControlMessage>).detail;
+      if (!detail) return;
+
+      if (detail.command === "toggle-play") togglePlay();
+      else if (detail.command === "toggle-mute") toggleMute();
+      else if (detail.command === "seek" && typeof detail.value === "number") onSeek(detail.value);
+      else if (detail.command === "volume" && typeof detail.value === "number") setVolumeTo(detail.value);
+    };
+
+    window.addEventListener(REMOTE_AUDIO_COMMAND_EVENT, onCommand);
+    return () => window.removeEventListener(REMOTE_AUDIO_COMMAND_EVENT, onCommand);
+  }, [isSlideActive, onSeek, setVolumeTo, toggleMute, togglePlay]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -167,12 +251,37 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
         preload="auto"
         onLoadedMetadata={(event) => {
           setDuration(event.currentTarget.duration);
+          setVolume(event.currentTarget.volume);
           if (status === "loading") setStatus("paused");
+          if (activeRef.current) publishState();
         }}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-        onPlay={() => setStatus("playing")}
-        onPause={() => setStatus((current) => (current === "blocked" ? current : "paused"))}
-        onEnded={() => setStatus("paused")}
+        onTimeUpdate={(event) => {
+          const time = event.currentTarget.currentTime;
+          setCurrentTime(time);
+          // Throttle remote updates to whole-second changes.
+          const second = Math.floor(time);
+          if (activeRef.current && second !== lastPublishedSecondRef.current) {
+            lastPublishedSecondRef.current = second;
+            publishState();
+          }
+        }}
+        onPlay={() => {
+          setStatus("playing");
+          if (activeRef.current) publishState();
+        }}
+        onPause={() => {
+          setStatus((current) => (current === "blocked" ? current : "paused"));
+          if (activeRef.current) publishState();
+        }}
+        onVolumeChange={(event) => {
+          setVolume(event.currentTarget.volume);
+          setMuted(event.currentTarget.muted);
+          if (activeRef.current) publishState();
+        }}
+        onEnded={() => {
+          setStatus("paused");
+          if (activeRef.current) publishState();
+        }}
         onError={() => setStatus("error")}
       />
 
@@ -204,7 +313,7 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
           min={0}
           onChange={(event) => onSeek(Number(event.target.value))}
           step={0.1}
-          style={{ "--audio-progress": `${progress}%` } as React.CSSProperties}
+          style={{ "--audio-progress": `${progress}%` } as CSSProperties}
           type="range"
           value={Math.min(currentTime, duration || 0)}
         />
@@ -212,7 +321,7 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
       </div>
 
       <p className="audio-player__status" role="status">
-        {statusLabel[status]}
+        {muted ? statusLabel[status] : `${statusLabel[status]} · vol ${Math.round(volume * 100)}%`}
       </p>
     </div>
   );
