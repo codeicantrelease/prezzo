@@ -1,4 +1,5 @@
 import { deckConfigs, findDeck, getDeckOrDefault } from "./deck-registry";
+import { Blackjack } from "./runtime/Blackjack";
 import { DubDubTokChallenge } from "./runtime/DubDubTokChallenge";
 import { PresentationShell } from "./runtime/PresentationShell";
 import { RemoteControllerPage } from "./runtime/RemoteControllerPage";
@@ -57,6 +58,14 @@ export function App() {
 
   if (hiddenPageSlug === "control") {
     return <RemoteControllerPage deck={selectedDeck} />;
+  }
+
+  if (hiddenPageSlug === "blackjack") {
+    return (
+      <PresentationShell deck={selectedDeck}>
+        <Blackjack deck={selectedDeck} />
+      </PresentationShell>
+    );
   }
 
   if (hiddenPageSlug === "dubdubtok" && dubdubtokConfig?.enabled) {

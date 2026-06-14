@@ -265,8 +265,8 @@ export function QuakeTerminal({
       deck: () => `${deck.slug} - ${deck.label}`,
       help: () =>
         hasTimer
-          ? "commands: help, deck, remote, pin, dubdubtok, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
-          : "commands: help, deck, remote, pin, dubdubtok, vim, vim on, vim off, goto 3, clear, close",
+          ? "commands: help, deck, remote, pin, dubdubtok, blackjack, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
+          : "commands: help, deck, remote, pin, dubdubtok, blackjack, vim, vim on, vim off, goto 3, clear, close",
       timer: () => formatTimer(timer),
     }),
     [deck.label, deck.slug, hasTimer, onClose, timer],
@@ -291,6 +291,12 @@ export function QuakeTerminal({
       output = page?.enabled ? "opening DubDubTok challenge" : "dubdubtok is not enabled for this deck";
       setHistory((current) => [...current, `> ${input}`, output]);
       if (page?.enabled) goToHiddenPage(deck.slug, "dubdubtok");
+      return;
+    }
+
+    if (base === "blackjack") {
+      setHistory((current) => [...current, `> ${input}`, "dealing you in..."]);
+      goToHiddenPage(deck.slug, "blackjack");
       return;
     }
 
