@@ -1,6 +1,6 @@
 # Prezzo
 
-Prezzo is a private React presentation lab for decks that can be shown live in the browser and rendered into video when the moment deserves proper spectacle.
+Prezzo is an open-source (MIT) React presentation lab for decks that can be shown live in the browser and rendered into video when the moment deserves proper spectacle.
 
 ## Quick Start
 
@@ -37,3 +37,7 @@ npm run dev -- customer-roadshow
 - `docs/technical-direction.md` records the stack decisions and constraints.
 - `docs/presentation-flow.md` captures the researched agent workflow and wow-factor roadmap.
 - `prezzo.json` is a compact machine-readable entrypoint for agents.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Committed media assets must be declared in `assets-allowlist.json` with a source and license; the `check-assets` CI guards against undeclared (potentially copyrighted) media landing in the repo.
