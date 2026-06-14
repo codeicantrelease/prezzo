@@ -67,6 +67,17 @@ Decks can opt into persistent runtime UI through `deck.config.ts`. The app shell
 
 The runtime shell wraps the selected deck in `src/App.tsx`, so its state survives Spectacle slide changes. Runtime UI should stay hidden during normal presenting unless the user opens it or triggers it with an explicit terminal command. The standard timer appears inside the terminal chrome, while `timer start` shows a top-right focus countdown overlay for the current live moment. Hidden pages use normal app routes under `/<deck-slug>/<page-slug>` and must not be part of the Spectacle slide count. Keep this layer lightweight and presenter-focused. Deck-specific runtime needs should start in deck config before becoming shared runtime features.
 
+Prezzo also supports a local remote-control path for phone or tablet presenter devices:
+
+- `npm run dev -- <slug>` binds Vite to `0.0.0.0` so another device on the same network can open the app.
+- The normal deck route stays `/<deck-slug>` and remains the default presentation mode.
+- The controller route is `/<deck-slug>/control`.
+- The Vite dev server generates a random six-digit PIN on startup, prints it to the server console, and exposes it to the in-deck terminal through the `pin` command on the presenting machine.
+- The `remote` terminal command shows a QR code for a LAN-safe `/<deck-slug>/control?pin=<session-pin>` URL. Scanning it opens the controller route and auto-connects with the current PIN.
+- Controller devices must exchange that PIN for a short-lived WebSocket token before sending slide commands.
+- Decks use `PrezzoSpectacleDeck` so Spectacle slide state is reported to the control backend and remote commands can call `stepForward`, `stepBackward`, or `skipTo`.
+- Presenter notes live in `deck.config.ts` as `presenterNotes`, indexed by slide, so the controller can show notes synchronized to the current slide without scraping the deck DOM.
+
 ## Remotion Boundary
 
 Remotion animation should be driven by frame state: `useCurrentFrame()`, `useVideoConfig()`, `interpolate()`, `spring()`, `Sequence`, and media primitives from Remotion.
