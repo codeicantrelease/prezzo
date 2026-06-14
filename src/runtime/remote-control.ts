@@ -34,9 +34,12 @@ export type RemoteServerMessage =
       type: "control";
     }
   | {
+      controllers: number;
       presenters: number;
       type: "connections";
     };
+
+export const REMOTE_CONTROLLER_CONNECTED_EVENT = "prezzo:remote-controller-connected";
 
 export function remoteWebSocketUrl(deckSlug: string, role: "controller" | "presenter", token?: string) {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
