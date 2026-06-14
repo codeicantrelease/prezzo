@@ -19,6 +19,7 @@ export function RemoteAccessOverlay({ access, onClose }: RemoteAccessOverlayProp
 
   useEffect(() => {
     let isMounted = true;
+    setQrCodeUrl("");
 
     void QRCode.toDataURL(access.remoteUrl, {
       color: {

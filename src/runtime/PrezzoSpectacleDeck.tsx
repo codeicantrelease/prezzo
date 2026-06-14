@@ -33,6 +33,10 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
       pendingStateRef.current = null;
     });
 
+    ws.addEventListener("error", () => {
+      console.warn("Remote presenter WebSocket connection failed.");
+    });
+
     ws.addEventListener("message", (event) => {
       let message: RemoteServerMessage;
 

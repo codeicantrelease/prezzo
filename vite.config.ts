@@ -4,20 +4,14 @@ import crypto from "node:crypto";
 import os from "node:os";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Duplex } from "node:stream";
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
+import type { RemoteDeckState } from "./src/runtime/remote-types";
 
 type RemoteClientRole = "controller" | "presenter";
 
 type RemoteClient = {
   deckSlug: string;
   role: RemoteClientRole;
-};
-
-type RemoteDeckState = {
-  slideCount: number;
-  slideIndex: number;
-  stepIndex: number;
-  updatedAt: number;
 };
 
 function readRequestBody(req: IncomingMessage) {

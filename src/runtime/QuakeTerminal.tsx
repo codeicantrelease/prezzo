@@ -322,10 +322,12 @@ export function QuakeTerminal({
       setHistory((current) => [...current, `> ${input}`, "retrieving remote PIN"]);
       void fetchRemoteAccess(deck.slug)
         .then((access) => {
+          const phoneUrl = access.controlUrls[0] ?? access.remoteUrl;
+
           setHistory((current) => [
             ...current,
             `remote PIN: ${access.pin}`,
-            `phone URL: ${access.controlUrls[0]}`,
+            `phone URL: ${phoneUrl}`,
           ]);
         })
         .catch((error) => {

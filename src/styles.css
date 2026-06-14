@@ -908,7 +908,7 @@ select {
 
 .remote-access-overlay__details strong {
   color: rgba(16, 20, 24, 0.68);
-  font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+  font-family: SFMono-Regular, "Cascadia Code", Consolas, monospace;
   font-size: 15px;
   max-width: 100%;
   overflow-wrap: anywhere;
