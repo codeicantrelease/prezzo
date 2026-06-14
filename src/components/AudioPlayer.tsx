@@ -44,6 +44,7 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
     if (!isSlideActive) {
       audio.pause();
       audio.currentTime = 0;
+      setCurrentTime(0);
       return;
     }
 
@@ -78,7 +79,14 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
         audio.muted = false;
         setMuted(false);
         await audio.play();
-        if (!cancelled) setStatus("playing");
+        // The slide may have deactivated while play() was pending; if so the
+        // cleanup already ran, so undo this late start instead of leaking audio.
+        if (cancelled) {
+          audio.pause();
+          audio.currentTime = 0;
+          return;
+        }
+        setStatus("playing");
       } catch {
         // Audible autoplay was blocked. Start muted (always permitted) and
         // unmute the instant the presenter touches the deck.
@@ -86,10 +94,13 @@ export function AudioPlayer({ src, title, subtitle, autoStart = false }: AudioPl
           audio.muted = true;
           setMuted(true);
           await audio.play();
-          if (!cancelled) {
-            setStatus("playing");
-            armUnmuteOnGesture();
+          if (cancelled) {
+            audio.pause();
+            audio.currentTime = 0;
+            return;
           }
+          setStatus("playing");
+          armUnmuteOnGesture();
         } catch {
           if (!cancelled) {
             setStatus("blocked");
