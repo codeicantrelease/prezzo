@@ -188,6 +188,7 @@ export function QuakeTerminal({
   const draftCommandRef = useRef("");
   const inputRef = useRef<HTMLInputElement>(null);
   const vimModeLabel = vimEnabled ? vimInputMode.toUpperCase() : "OFF";
+  const hasBlackjack = Boolean(deck.runtime?.hiddenPages?.blackjack?.enabled);
 
   const setInputSelection = (input: HTMLInputElement, cursor: number, value: string) => {
     const nextCursor = vimEnabled && vimInputMode === "normal" ? normalCursor(cursor, value) : clampCursor(cursor, value);
@@ -263,13 +264,16 @@ export function QuakeTerminal({
         return "closed";
       },
       deck: () => `${deck.slug} - ${deck.label}`,
-      help: () =>
-        hasTimer
-          ? "commands: help, deck, remote, pin, dubdubtok, blackjack, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
-          : "commands: help, deck, remote, pin, dubdubtok, blackjack, vim, vim on, vim off, goto 3, clear, close",
+      help: () => {
+        const blackjack = hasBlackjack ? "blackjack, " : "";
+
+        return hasTimer
+          ? `commands: help, deck, remote, pin, dubdubtok, ${blackjack}vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close`
+          : `commands: help, deck, remote, pin, dubdubtok, ${blackjack}vim, vim on, vim off, goto 3, clear, close`;
+      },
       timer: () => formatTimer(timer),
     }),
-    [deck.label, deck.slug, hasTimer, onClose, timer],
+    [deck.label, deck.slug, hasBlackjack, hasTimer, onClose, timer],
   );
 
   const runCommand = (rawCommand: string) => {
@@ -295,8 +299,9 @@ export function QuakeTerminal({
     }
 
     if (base === "blackjack") {
-      setHistory((current) => [...current, `> ${input}`, "dealing you in..."]);
-      goToHiddenPage(deck.slug, "blackjack");
+      output = hasBlackjack ? "dealing you in..." : "blackjack is not enabled for this deck";
+      setHistory((current) => [...current, `> ${input}`, output]);
+      if (hasBlackjack) goToHiddenPage(deck.slug, "blackjack");
       return;
     }
 

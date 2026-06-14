@@ -55,12 +55,13 @@ export function App() {
   const DeckComponent = getDeckOrDefault(selectedDeck.slug).component;
   const hiddenPageSlug = hiddenPageSlugFromLocation();
   const dubdubtokConfig = selectedDeck.runtime?.hiddenPages?.dubdubtok;
+  const blackjackConfig = selectedDeck.runtime?.hiddenPages?.blackjack;
 
   if (hiddenPageSlug === "control") {
     return <RemoteControllerPage deck={selectedDeck} />;
   }
 
-  if (hiddenPageSlug === "blackjack") {
+  if (hiddenPageSlug === "blackjack" && blackjackConfig?.enabled) {
     return (
       <PresentationShell deck={selectedDeck}>
         <Blackjack deck={selectedDeck} />

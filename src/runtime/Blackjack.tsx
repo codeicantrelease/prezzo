@@ -18,6 +18,7 @@ const DECK_COUNT = 6;
 const RESHUFFLE_AT = 60;
 const STARTING_BANKROLL = 500;
 const CHIPS = [10, 25, 50, 100];
+const MIN_BET = 5;
 
 function buildShoe(): Card[] {
   const cards: Card[] = [];
@@ -71,7 +72,14 @@ function isSoft(cards: Card[]) {
     if (card.rank === "A") aces += 1;
   }
 
-  return aces > 0 && total <= 21;
+  // Reduce aces from 11 to 1 until the hand is valid; a hand is soft if any
+  // ace is still counted as 11 (e.g. A-A-6 is soft 18, not a hard total).
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces -= 1;
+  }
+
+  return aces > 0;
 }
 
 function isNaturalBlackjack(cards: Card[]) {
@@ -145,7 +153,7 @@ export function Blackjack({ deck }: BlackjackProps) {
         note = "Bust. Dealer takes it.";
       } else if (naturalPlayer && !dealerNatural) {
         result = "blackjack";
-        payout = activeWager + Math.floor(activeWager * 1.5);
+        payout = activeWager + Math.round(activeWager * 1.5);
         note = "Blackjack! Paid 3:2.";
       } else if (dealerNatural && !naturalPlayer) {
         result = "lose";
@@ -291,7 +299,7 @@ export function Blackjack({ deck }: BlackjackProps) {
     setDealerHand([]);
     setOutcome(null);
     setPhase("betting");
-    setMessage(bankroll <= 0 ? "Out of chips. Press R to rebuy." : "Place your bet and deal.");
+    setMessage(bankroll < MIN_BET ? "Not enough chips. Press R to rebuy." : "Place your bet and deal.");
   }, [bankroll, phase]);
 
   const rebuy = useCallback(() => {
@@ -305,7 +313,7 @@ export function Blackjack({ deck }: BlackjackProps) {
       if (phase !== "betting") return;
       setBet((current) => {
         const next = current + delta;
-        if (next < 5) return 5;
+        if (next < MIN_BET) return MIN_BET;
         if (next > bankroll) return Math.max(5, bankroll);
         return next;
       });
@@ -336,7 +344,7 @@ export function Blackjack({ deck }: BlackjackProps) {
         } else if (key === "arrowdown" || key === "-") {
           event.preventDefault();
           adjustBet(-5);
-        } else if (key === "r" && bankroll <= 0) {
+        } else if (key === "r" && bankroll < MIN_BET) {
           event.preventDefault();
           rebuy();
         }
@@ -453,7 +461,7 @@ export function Blackjack({ deck }: BlackjackProps) {
                 +5
               </button>
             </div>
-            {bankroll <= 0 ? (
+            {bankroll < MIN_BET ? (
               <button className="blackjack-action blackjack-action--primary" onClick={rebuy} type="button">
                 Rebuy ${STARTING_BANKROLL} (R)
               </button>
