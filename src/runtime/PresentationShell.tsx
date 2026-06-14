@@ -97,6 +97,11 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
     restorePresentationFocus();
   }, [restorePresentationFocus]);
 
+  const closeRemoteAccess = useCallback(() => {
+    setRemoteAccess(null);
+    restorePresentationFocus();
+  }, [restorePresentationFocus]);
+
   useEffect(() => {
     if (!hasTimer) return undefined;
 
@@ -220,9 +225,7 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
         {children}
       </div>
       {hasTimer && focusTimerState.isVisible ? <FocusTimerOverlay state={focusTimerState} /> : null}
-      {remoteAccess ? (
-        <RemoteAccessOverlay access={remoteAccess} onClose={() => setRemoteAccess(null)} />
-      ) : null}
+      {remoteAccess ? <RemoteAccessOverlay access={remoteAccess} onClose={closeRemoteAccess} /> : null}
       {hasTerminal ? (
         <QuakeTerminal
           deck={deck}
