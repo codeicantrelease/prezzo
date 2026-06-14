@@ -27,6 +27,9 @@ export const deckConfig = {
         targetYPercent: 50,
         toleranceDegrees: 24,
       },
+      blackjack: {
+        enabled: true,
+      },
     },
     timer: {
       enabled: true,

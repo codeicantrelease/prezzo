@@ -37,6 +37,9 @@ export type DeckConfig = {
         targetYPercent?: number;
         toleranceDegrees?: number;
       };
+      blackjack?: {
+        enabled: boolean;
+      };
     };
     timer?: {
       enabled: boolean;
