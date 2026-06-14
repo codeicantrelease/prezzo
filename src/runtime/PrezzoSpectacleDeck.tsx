@@ -17,7 +17,7 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
   const pendingStateRef = useRef<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const lastSentStateRef = useRef("");
-  const controllerCountRef = useRef(0);
+  const controllerCountRef = useRef<number | null>(null);
 
   deckRef.current = deck;
 
@@ -52,7 +52,7 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
         const previous = controllerCountRef.current;
         controllerCountRef.current = message.controllers;
 
-        if (message.controllers > previous) {
+        if (previous !== null && message.controllers > previous) {
           window.dispatchEvent(new Event(REMOTE_CONTROLLER_CONNECTED_EVENT));
         }
 
