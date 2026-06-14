@@ -1,12 +1,12 @@
 # Prezzo
 
-Prezzo is a private React presentation project for building decks that feel as familiar as PowerPoint to present, but as unconstrained as a modern React app to create.
+Prezzo is an open-source (MIT) React presentation project for building decks that feel as familiar as PowerPoint to present, but as unconstrained as a modern React app to create.
 
 The goal is to make high-impact technical and product storytelling easier for agents and humans together: live slides in the browser, reusable visual components, presenter notes, data-driven charts, embedded media, and Remotion sequences when the idea needs a rendered video moment. When Prezzo is working, a rough spoken brief can become a coherent run of show, then a polished deck, then selected exported motion graphics without rebuilding the story in another tool.
 
 ## Current Status
 
-This is a greenfield starter repo under `/Users/duane/Documents/code/duaneedwards/prezzo`, intended for a future private GitHub repo under `duaneedwards/prezzo`.
+Prezzo is an open-source (MIT) multi-deck presentation app.
 
 The current version is a runnable multi-deck Vite React app with:
 

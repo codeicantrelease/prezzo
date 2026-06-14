@@ -1,0 +1,4 @@
+{
+  "note": "Every committed raster image / audio / video asset must be listed here with its source and license. CI (scripts/check-assets.mjs) fails if an undeclared binary media asset is committed, forcing a human to assert provenance and preventing copyrighted media from landing. Text assets such as SVG are exempt. Large or third-party-licensed media should be referenced at runtime and gitignored instead of committed.",
+  "assets": []
+}

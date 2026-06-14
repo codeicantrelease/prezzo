@@ -1,0 +1,23 @@
+name: Asset provenance
+
+# Blocks copyrighted media from landing: every committed image/audio/video must
+# be declared in assets-allowlist.json with a source and license. See
+# scripts/check-assets.mjs.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - name: Check asset provenance
+        run: node scripts/check-assets.mjs

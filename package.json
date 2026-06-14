@@ -2,6 +2,7 @@
   "name": "prezzo",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "React-native presentation lab for live decks, rendered video moments, and agent-driven storytelling.",
   "scripts": {
@@ -14,7 +15,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "studio": "node scripts/prezzo.mjs studio",
     "render": "node scripts/prezzo.mjs render",
-    "check": "tsc --noEmit && vite build"
+    "check:assets": "node scripts/check-assets.mjs",
+    "check": "tsc --noEmit && vite build && node scripts/check-assets.mjs"
   },
   "dependencies": {
     "@remotion/player": "^4.0.469",
