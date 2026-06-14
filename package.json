@@ -9,6 +9,7 @@
     "deck:new": "node scripts/prezzo.mjs new",
     "deck:qa": "node scripts/prezzo.mjs qa",
     "dev": "node scripts/prezzo.mjs dev",
+    "present": "node scripts/present.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "studio": "node scripts/prezzo.mjs studio",

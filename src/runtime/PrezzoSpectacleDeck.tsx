@@ -63,14 +63,12 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
 
       if (!currentDeck?.initialized) return;
 
-      if (message.type === "hello" && message.state) {
-        currentDeck.skipTo({
-          slideIndex: Math.max(0, Math.min(message.state.slideIndex, currentDeck.slideCount - 1)),
-          stepIndex: Math.max(0, message.state.stepIndex),
-        });
-        return;
-      }
-
+      // The deck is the source of truth for its starting position: Spectacle
+      // honors ?slideIndex= in the URL (else slide 1). We intentionally do NOT
+      // reposition to the server's remembered state on `hello`, so opening the
+      // deck URL no longer jumps to wherever it was last left. Live phone
+      // control still drives navigation via `control` messages below, and the
+      // presenter pushes its real position up so controllers stay in sync.
       if (message.type !== "control") return;
 
       if (message.command === "next") {
