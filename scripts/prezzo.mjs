@@ -221,6 +221,11 @@ export const deckConfig = {
   slideCount: 1,
   presenterNotes: ["Opening promise."],
   component: ${componentName},
+  runtime: {
+    terminal: {
+      enabled: true,
+    },
+  },
   remotion: {
     id: "${slug}",
     component: DeckVideo,
