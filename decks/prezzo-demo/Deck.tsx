@@ -11,6 +11,7 @@ import {
   Text,
   UnorderedList,
 } from "spectacle";
+import { AudioPlayer } from "../../src/components/AudioPlayer";
 import { InsightChart } from "../../src/components/InsightChart";
 import { MotionBadge } from "../../src/components/MotionBadge";
 import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
@@ -168,6 +169,33 @@ export function PrezzoDeck({ remote }: PrezzoDeckRuntimeProps) {
             polished live deck, then export selected motion graphics without rebuilding
             the story in another tool.
           </Text>
+        </FlexBox>
+      </Slide>
+
+      <Slide backgroundColor="#101418">
+        <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
+          <Text className="kicker" color="#f3b23a">
+            Media runtime
+          </Text>
+          <Heading fontSize="72px" color="#f8f3e7" margin="8px 0 16px">
+            Audio that starts on cue.
+          </Heading>
+          <Text color="rgba(248,243,231,0.75)" fontSize="30px" maxWidth="980px" margin="0 0 40px">
+            A slide can own a real audio element. This one tries to autostart the moment
+            it becomes active, and falls back to a play control if the browser blocks
+            unmuted autoplay.
+          </Text>
+          <AudioPlayer
+            autoStart
+            src="/assets/danger-zone.mp3"
+            subtitle="Kenny Loggins"
+            title="Danger Zone"
+          />
+          <Notes>
+            Test slide for the audio runtime. The track is referenced from
+            public/assets and is intentionally not committed. Autostart fires on slide
+            activation; if the browser blocks it, use the play button.
+          </Notes>
         </FlexBox>
       </Slide>
     </PrezzoSpectacleDeck>
