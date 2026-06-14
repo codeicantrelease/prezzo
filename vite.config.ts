@@ -74,6 +74,14 @@ function prezzoRemoteControlPlugin() {
   };
   const presenterCount = (deckSlug: string) =>
     [...clients.values()].filter((client) => client.deckSlug === deckSlug && client.role === "presenter").length;
+  const controllerCount = (deckSlug: string) =>
+    [...clients.values()].filter((client) => client.deckSlug === deckSlug && client.role === "controller").length;
+  const broadcastConnections = (deckSlug: string) =>
+    broadcast(deckSlug, {
+      controllers: controllerCount(deckSlug),
+      presenters: presenterCount(deckSlug),
+      type: "connections",
+    });
 
   return {
     name: "prezzo-remote-control",
@@ -182,7 +190,7 @@ function prezzoRemoteControlPlugin() {
           }),
         );
 
-        broadcast(deckSlug, { type: "connections", presenters: presenterCount(deckSlug) });
+        broadcastConnections(deckSlug);
 
         ws.on("message", (raw) => {
           const meta = clients.get(ws);
@@ -240,7 +248,7 @@ function prezzoRemoteControlPlugin() {
           }
 
           if (meta) {
-            broadcast(meta.deckSlug, { type: "connections", presenters: presenterCount(meta.deckSlug) });
+            broadcastConnections(meta.deckSlug);
           }
         });
       });
