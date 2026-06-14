@@ -16,6 +16,7 @@ decks/<deck-slug>/
 ```
 
 - `deck.config.ts` registers the deck slug, label, browser component, slide count, and optional Remotion composition.
+- `presenterNotes` in `deck.config.ts` is an ordered `string[]` indexed by slide, e.g. `presenterNotes: ["Opening note", "Second slide note"]`. Keep it in sync with the slide count so remote controllers can show the current note. If an entry is missing or the array is shorter than `slideCount`, the controller shows `No presenter notes for this slide.`
 - `runtime` in `deck.config.ts` opts the deck into persistent presentation UI such as timers and the Quake terminal.
 - `Deck.tsx` is the live Spectacle deck.
 - `notes.md` holds the brief, run of show, style-guide reference, assumptions, and QA notes.
@@ -107,6 +108,8 @@ Starter commands:
 ```text
 help
 deck
+remote
+pin
 dubdubtok
 vim
 vim on
@@ -125,6 +128,10 @@ goto 3
 clear
 close
 ```
+
+The default presentation route is still `/<deck-slug>`. Remote control mode lives at `/<deck-slug>/control` for phones and tablets on the same network. Start the deck with `npm run dev -- <deck-slug>`, open the normal route on the presenting machine, then use `remote` in the Quake terminal to show a QR code for `/<deck-slug>/control?pin=<session-pin>`. Scanning that QR opens the controller and signs it in automatically. Use `pin` when you only want the six-digit presenter PIN and plain LAN control URL. Controller devices can advance, reverse, jump slides, and read synchronized presenter notes after authentication.
+
+Use `PrezzoSpectacleDeck` instead of Spectacle's raw `Deck` in live deck components. It preserves normal Spectacle behavior while reporting active slide state to the remote-control backend and applying remote navigation commands to the main presenting instance.
 
 Keep runtime chrome presenter-focused. Do not enable it for a deck unless the deck actually benefits from live controls, timing, debug/status overlays, or command interaction.
 

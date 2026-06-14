@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { DeckConfig } from "../deck-types";
+import { fetchRemoteAccess } from "./remote-control";
+import type { RemoteAccessDetails } from "./remote-control";
 import type { FocusTimerControls, TimerControls, TimerState } from "./PresentationShell";
 import { RuntimeTimer } from "./RuntimeTimer";
 
@@ -11,6 +13,7 @@ type QuakeTerminalProps = {
   isOpen: boolean;
   onClose: () => void;
   onOpen: () => void;
+  onShowRemoteAccess: (access: RemoteAccessDetails) => void;
   timer: TimerState;
   timerControls: TimerControls;
 };
@@ -169,6 +172,7 @@ export function QuakeTerminal({
   isOpen,
   onClose,
   onOpen,
+  onShowRemoteAccess,
   timer,
   timerControls,
 }: QuakeTerminalProps) {
@@ -261,8 +265,8 @@ export function QuakeTerminal({
       deck: () => `${deck.slug} - ${deck.label}`,
       help: () =>
         hasTimer
-          ? "commands: help, deck, dubdubtok, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
-          : "commands: help, deck, dubdubtok, vim, vim on, vim off, goto 3, clear, close",
+          ? "commands: help, deck, remote, pin, dubdubtok, vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close"
+          : "commands: help, deck, remote, pin, dubdubtok, vim, vim on, vim off, goto 3, clear, close",
       timer: () => formatTimer(timer),
     }),
     [deck.label, deck.slug, hasTimer, onClose, timer],
@@ -295,6 +299,43 @@ export function QuakeTerminal({
       output = Number.isFinite(slide) && slide > 0 ? `going to slide ${slide}` : "usage: goto <slide-number>";
       setHistory((current) => [...current, `> ${input}`, output]);
       if (Number.isFinite(slide) && slide > 0) goToSlide(deck.slug, slide);
+      return;
+    }
+
+    if (base === "remote") {
+      setHistory((current) => [...current, `> ${input}`, "opening remote control QR"]);
+      void fetchRemoteAccess(deck.slug)
+        .then((access) => {
+          onShowRemoteAccess(access);
+          setHistory((current) => [...current, `remote URL: ${access.remoteUrl}`]);
+        })
+        .catch((error) => {
+          setHistory((current) => [
+            ...current,
+            error instanceof Error ? error.message : "Remote access details are not available.",
+          ]);
+        });
+      return;
+    }
+
+    if (base === "pin") {
+      setHistory((current) => [...current, `> ${input}`, "retrieving remote PIN"]);
+      void fetchRemoteAccess(deck.slug)
+        .then((access) => {
+          const phoneUrl = access.controlUrls[0] ?? access.remoteUrl;
+
+          setHistory((current) => [
+            ...current,
+            `remote PIN: ${access.pin}`,
+            `phone URL: ${phoneUrl}`,
+          ]);
+        })
+        .catch((error) => {
+          setHistory((current) => [
+            ...current,
+            error instanceof Error ? error.message : "PIN is not available.",
+          ]);
+        });
       return;
     }
 
