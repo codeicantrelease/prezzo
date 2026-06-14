@@ -111,6 +111,7 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
     if (!hasTerminal) return undefined;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (remoteAccess) return;
       if (event.code !== "Backquote") return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 
@@ -121,7 +122,7 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeTerminal, hasTerminal, isTerminalOpen]);
+  }, [closeTerminal, hasTerminal, isTerminalOpen, remoteAccess]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

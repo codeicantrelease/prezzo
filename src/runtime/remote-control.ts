@@ -1,9 +1,6 @@
-export type RemoteDeckState = {
-  slideCount: number;
-  slideIndex: number;
-  stepIndex: number;
-  updatedAt: number;
-};
+import type { RemoteDeckState } from "./remote-types";
+
+export type { RemoteDeckState } from "./remote-types";
 
 export type RemoteAccessDetails = {
   controlUrls: string[];
