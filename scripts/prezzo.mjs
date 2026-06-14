@@ -115,7 +115,14 @@ async function updateRegistry(slug) {
   if (!registry.includes(`${binding},`)) {
     registry = registry.replace(
       /export const deckConfigs = \[([\s\S]*?)\] satisfies DeckConfig\[];/,
-      (match, body) => `export const deckConfigs = [${body.trimEnd()}\n  ${binding},\n] satisfies DeckConfig[];`,
+      (match, body) => {
+        // Ensure the existing last entry has a trailing comma before appending
+        // (the seed registry is single-line `[prezzoDemo]` with no comma).
+        const trimmed = body.trimEnd();
+        const separator = trimmed.length === 0 || trimmed.endsWith(",") ? "" : ",";
+
+        return `export const deckConfigs = [${trimmed}${separator}\n  ${binding},\n] satisfies DeckConfig[];`;
+      },
     );
   }
 
@@ -143,14 +150,13 @@ async function createDeck() {
   await fs.writeFile(
     path.join(deckPath, "Deck.tsx"),
     `import { FlexBox, Heading, Slide, Text } from "spectacle";
-import { Template } from "../../src/components/Template";
 import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
 import { PrezzoSpectacleDeck } from "../../src/runtime/PrezzoSpectacleDeck";
 import { prezzoTheme } from "../../src/theme";
 
 export function ${componentName}({ remote }: PrezzoDeckRuntimeProps) {
   return (
-    <PrezzoSpectacleDeck remote={remote} theme={prezzoTheme} template={Template}>
+    <PrezzoSpectacleDeck remote={remote} theme={prezzoTheme}>
       <Slide backgroundColor="#101418">
         <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
           <Text className="kicker" color="#f3b23a">
