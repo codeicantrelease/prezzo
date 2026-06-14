@@ -6,7 +6,7 @@ The goal is to make high-impact technical and product storytelling easier for ag
 
 ## Current Status
 
-This is a greenfield starter repo under `/Users/duane/Documents/code/duaneedwards/prezzo`, intended for a future private GitHub repo under `duaneedwards/prezzo`.
+Prezzo is an open-source (MIT) multi-deck presentation app.
 
 The current version is a runnable multi-deck Vite React app with:
 

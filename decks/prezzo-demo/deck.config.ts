@@ -20,7 +20,7 @@ export const deckConfig = {
     hiddenPages: {
       dubdubtok: {
         enabled: true,
-        imageUrl: "/assets/dubdubtok-one-piece-source.webp",
+        imageUrl: "/assets/dubdubtok-source.svg",
         sourceAspectRatio: 500 / 282,
         targetRotationDegrees: 267,
         targetPercent: 50,

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 282" width="500" height="282" role="img" aria-label="Abstract geometric puzzle background">
+  <rect width="500" height="282" fill="#101418"/>
+  <polygon points="0,282 190,0 330,0 150,282" fill="#f3b23a"/>
+  <polygon points="330,0 500,0 500,170 360,282 210,282" fill="#f8f3e7" fill-opacity="0.94"/>
+  <path d="M0 196 L132 238 L66 282 L0 282 Z" fill="#f3b23a" fill-opacity="0.85"/>
+  <circle cx="118" cy="84" r="56" fill="#f8f3e7"/>
+  <circle cx="118" cy="84" r="29" fill="#101418"/>
+  <polygon points="384,44 470,44 427,128" fill="#101418"/>
+  <rect x="250" y="150" width="74" height="74" transform="rotate(22 287 187)" fill="#f3b23a"/>
+  <line x1="0" y1="0" x2="500" y2="282" stroke="#f8f3e7" stroke-opacity="0.12" stroke-width="3"/>
+  <circle cx="448" cy="64" r="18" fill="#101418" fill-opacity="0.6"/>
+</svg>

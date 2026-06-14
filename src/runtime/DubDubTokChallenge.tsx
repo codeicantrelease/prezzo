@@ -35,7 +35,7 @@ export function DubDubTokChallenge({ config }: DubDubTokChallengeProps) {
   const targetRotationDegrees = normalizeDegrees(config?.targetRotationDegrees, 235);
   const toleranceDegrees = Math.max(1, Math.min(45, Number(config?.toleranceDegrees ?? 8)));
   const sourceAspectRatio = positiveNumber(config?.sourceAspectRatio, 1);
-  const imageUrl = config?.imageUrl ?? "/assets/dubdubtok-one-piece-source.webp";
+  const imageUrl = config?.imageUrl ?? "/assets/dubdubtok-source.svg";
   const pieceImageUrl = config?.pieceImageUrl ?? imageUrl;
   const [sliderValue, setSliderValue] = useState(0);
   const [solved, setSolved] = useState(false);
