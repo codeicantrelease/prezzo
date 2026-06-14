@@ -1,9 +1,21 @@
-import { ChevronLeft, ChevronRight, Lock, MonitorDot, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, MonitorDot, Pause, Play, Send, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { DeckConfig } from "../deck-types";
 import { remoteWebSocketUrl } from "./remote-control";
-import type { RemoteControlCommand, RemoteDeckState, RemoteServerMessage } from "./remote-control";
+import type {
+  RemoteAudioCommand,
+  RemoteAudioState,
+  RemoteControlCommand,
+  RemoteDeckState,
+  RemoteServerMessage,
+} from "./remote-control";
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const whole = Math.floor(seconds);
+  return `${Math.floor(whole / 60)}:${(whole % 60).toString().padStart(2, "0")}`;
+}
 
 type RemoteControllerPageProps = {
   deck: DeckConfig;
@@ -23,6 +35,7 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   const [status, setStatus] = useState<ConnectionStatus>("idle");
   const [error, setError] = useState("");
   const [state, setState] = useState<RemoteDeckState | null>(null);
+  const [audio, setAudio] = useState<RemoteAudioState | null>(null);
   const [presenterCount, setPresenterCount] = useState(0);
   const [gotoValue, setGotoValue] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
@@ -30,6 +43,10 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   const slideCount = state?.slideCount ?? deck.slideCount ?? 1;
   const currentSlideIndex = clampSlideIndex(state?.slideIndex ?? 0, deck);
   const currentSlideNumber = currentSlideIndex + 1;
+  // Only surface audio controls for the slide we are actually on. The bridge
+  // stamps each audio-state with its slide; if it does not match the current
+  // slide (e.g. a "cleared" update was missed), keep the panel hidden.
+  const showAudio = Boolean(audio?.hasAudio && audio.slideIndex === currentSlideIndex);
   const notes = deck.presenterNotes?.[currentSlideIndex] ?? "No presenter notes for this slide.";
 
   const progress = useMemo(() => {
@@ -109,6 +126,10 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
       if (message.type === "connections") {
         setPresenterCount(message.presenters);
       }
+
+      if (message.type === "audio-state") {
+        setAudio(message.audio);
+      }
     });
 
     ws.addEventListener("close", () => {
@@ -153,6 +174,13 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
     if (!Number.isFinite(slideNumber)) return;
 
     sendControl("goto", clampSlideIndex(slideNumber - 1, deck));
+  };
+
+  const sendAudioControl = (command: RemoteAudioCommand, value?: number) => {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    ws.send(JSON.stringify({ command, type: "audio-control", value }));
   };
 
   if (!token) {
@@ -218,6 +246,66 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
           <ChevronRight size={30} />
         </button>
       </section>
+
+      {showAudio && audio ? (
+        <section className="remote-audio" aria-label="Audio controls">
+          <div className="remote-audio__meta">
+            <span>Audio</span>
+            <strong>{audio.title ?? "Now playing"}</strong>
+            {audio.subtitle ? <small>{audio.subtitle}</small> : null}
+          </div>
+
+          <div className="remote-audio__transport">
+            <button
+              aria-label={audio.playing ? "Pause" : "Play"}
+              className="remote-audio__play"
+              onClick={() => sendAudioControl("toggle-play")}
+              type="button"
+            >
+              {audio.playing ? <Pause size={26} /> : <Play size={26} />}
+            </button>
+            <button
+              aria-label={audio.muted ? "Unmute" : "Mute"}
+              className="remote-audio__icon"
+              onClick={() => sendAudioControl("toggle-mute")}
+              type="button"
+            >
+              {audio.muted ? <VolumeX size={22} /> : <Volume2 size={22} />}
+            </button>
+            <div className="remote-audio__volume">
+              <button
+                aria-label="Volume down"
+                onClick={() => sendAudioControl("volume", Math.max(0, audio.volume - 0.1))}
+                type="button"
+              >
+                −
+              </button>
+              <span>{Math.round(audio.volume * 100)}%</span>
+              <button
+                aria-label="Volume up"
+                onClick={() => sendAudioControl("volume", Math.min(1, audio.volume + 0.1))}
+                type="button"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="remote-audio__scrubber">
+            <span>{formatTime(audio.currentTime)}</span>
+            <input
+              aria-label="Seek audio"
+              max={Math.max(1, audio.duration)}
+              min={0}
+              onChange={(event) => sendAudioControl("seek", Number(event.target.value))}
+              step={1}
+              type="range"
+              value={Math.min(audio.currentTime, audio.duration || 0)}
+            />
+            <span>{formatTime(audio.duration)}</span>
+          </div>
+        </section>
+      ) : null}
 
       <form className="remote-control__goto" onSubmit={gotoSlide}>
         <label htmlFor="remote-goto">Slide</label>

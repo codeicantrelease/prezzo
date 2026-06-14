@@ -3,8 +3,13 @@ import type { ReactNode } from "react";
 import { Deck as SpectacleDeck, DeckContext } from "spectacle";
 import type { DeckProps } from "spectacle";
 import type { PrezzoDeckRuntimeProps } from "../deck-types";
-import { REMOTE_CONTROLLER_CONNECTED_EVENT, remoteWebSocketUrl } from "./remote-control";
-import type { RemoteServerMessage } from "./remote-control";
+import {
+  REMOTE_AUDIO_COMMAND_EVENT,
+  REMOTE_AUDIO_STATE_EVENT,
+  REMOTE_CONTROLLER_CONNECTED_EVENT,
+  remoteWebSocketUrl,
+} from "./remote-control";
+import type { RemoteAudioState, RemoteServerMessage } from "./remote-control";
 
 type PrezzoSpectacleDeckProps = DeckProps & {
   children: ReactNode;
@@ -18,6 +23,7 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
   const wsRef = useRef<WebSocket | null>(null);
   const lastSentStateRef = useRef("");
   const controllerCountRef = useRef<number | null>(null);
+  const lastAudioStateRef = useRef<string | null>(null);
 
   deckRef.current = deck;
 
@@ -28,6 +34,8 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
     wsRef.current = ws;
 
     ws.addEventListener("open", () => {
+      if (lastAudioStateRef.current) ws.send(lastAudioStateRef.current);
+
       if (!pendingStateRef.current) return;
 
       ws.send(pendingStateRef.current);
@@ -37,6 +45,20 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
     ws.addEventListener("error", () => {
       console.warn("Remote presenter WebSocket connection failed.");
     });
+
+    // The active slide's AudioPlayer publishes its playback over a window event
+    // (separate component tree); forward it to controllers via the socket.
+    const onAudioState = (event: Event) => {
+      const detail = (event as CustomEvent<RemoteAudioState>).detail;
+      // Stamp the slide the audio is on so the controller can scope the panel
+      // to the current slide regardless of message ordering or dropped clears.
+      const audio: RemoteAudioState = { ...detail, slideIndex: deckRef.current?.activeView.slideIndex ?? 0 };
+      const serialized = JSON.stringify({ audio, type: "audio-state" });
+      lastAudioStateRef.current = serialized;
+      if (ws.readyState === WebSocket.OPEN) ws.send(serialized);
+    };
+
+    window.addEventListener(REMOTE_AUDIO_STATE_EVENT, onAudioState);
 
     ws.addEventListener("message", (event) => {
       let message: RemoteServerMessage;
@@ -56,6 +78,15 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
           window.dispatchEvent(new Event(REMOTE_CONTROLLER_CONNECTED_EVENT));
         }
 
+        return;
+      }
+
+      if (message.type === "audio-control") {
+        window.dispatchEvent(
+          new CustomEvent(REMOTE_AUDIO_COMMAND_EVENT, {
+            detail: { command: message.command, value: message.value },
+          }),
+        );
         return;
       }
 
@@ -90,6 +121,7 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
     });
 
     return () => {
+      window.removeEventListener(REMOTE_AUDIO_STATE_EVENT, onAudioState);
       ws.close();
       if (wsRef.current === ws) wsRef.current = null;
     };

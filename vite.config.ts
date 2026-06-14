@@ -5,7 +5,7 @@ import os from "node:os";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocket, WebSocketServer } from "ws";
-import type { RemoteDeckState } from "./src/runtime/remote-types";
+import type { RemoteAudioState, RemoteDeckState } from "./src/runtime/remote-types";
 
 type RemoteClientRole = "controller" | "presenter";
 
@@ -59,6 +59,7 @@ function prezzoRemoteControlPlugin() {
   const clients = new Map<WebSocket, RemoteClient>();
   const clientTokens = new Map<WebSocket, string>();
   const deckStates = new Map<string, RemoteDeckState>();
+  const audioStates = new Map<string, RemoteAudioState | null>();
   const wss = new WebSocketServer({ noServer: true });
 
   const broadcast = (deckSlug: string, payload: unknown, roles?: RemoteClientRole[]) => {
@@ -192,16 +193,22 @@ function prezzoRemoteControlPlugin() {
 
         broadcastConnections(deckSlug);
 
+        if (role === "controller") {
+          ws.send(JSON.stringify({ audio: audioStates.get(deckSlug) ?? null, type: "audio-state" }));
+        }
+
         ws.on("message", (raw) => {
           const meta = clients.get(ws);
           if (!meta) return;
 
           let message: {
-            command?: "goto" | "next" | "previous";
+            audio?: RemoteAudioState | null;
+            command?: string;
             slideCount?: number;
             slideIndex?: number;
             stepIndex?: number;
             type?: string;
+            value?: number;
           };
 
           try {
@@ -223,6 +230,13 @@ function prezzoRemoteControlPlugin() {
             return;
           }
 
+          if (meta.role === "presenter" && message.type === "audio-state") {
+            const audio = message.audio ?? null;
+            audioStates.set(meta.deckSlug, audio);
+            broadcast(meta.deckSlug, { audio, type: "audio-state" }, ["controller"]);
+            return;
+          }
+
           if (meta.role === "controller" && message.type === "control") {
             broadcast(
               meta.deckSlug,
@@ -231,6 +245,19 @@ function prezzoRemoteControlPlugin() {
                 slideIndex: message.slideIndex,
                 stepIndex: message.stepIndex,
                 type: "control",
+              },
+              ["presenter"],
+            );
+            return;
+          }
+
+          if (meta.role === "controller" && message.type === "audio-control") {
+            broadcast(
+              meta.deckSlug,
+              {
+                command: message.command,
+                type: "audio-control",
+                value: message.value,
               },
               ["presenter"],
             );
