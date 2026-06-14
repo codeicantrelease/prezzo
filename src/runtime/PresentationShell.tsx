@@ -4,6 +4,7 @@ import type { DeckConfig } from "../deck-types";
 import { FocusTimerOverlay } from "./FocusTimerOverlay";
 import { QuakeTerminal } from "./QuakeTerminal";
 import { RemoteAccessOverlay } from "./RemoteAccessOverlay";
+import { REMOTE_CONTROLLER_CONNECTED_EVENT } from "./remote-control";
 import type { RemoteAccessDetails } from "./remote-control";
 
 export type TimerMode = "elapsed" | "countdown";
@@ -101,6 +102,15 @@ export function PresentationShell({ deck, children }: PresentationShellProps) {
     setRemoteAccess(null);
     restorePresentationFocus();
   }, [restorePresentationFocus]);
+
+  useEffect(() => {
+    if (!remoteAccess) return undefined;
+
+    const onControllerConnected = () => closeRemoteAccess();
+
+    window.addEventListener(REMOTE_CONTROLLER_CONNECTED_EVENT, onControllerConnected);
+    return () => window.removeEventListener(REMOTE_CONTROLLER_CONNECTED_EVENT, onControllerConnected);
+  }, [remoteAccess, closeRemoteAccess]);
 
   useEffect(() => {
     if (!hasTimer) return undefined;
