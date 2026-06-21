@@ -262,13 +262,15 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
             loading="lazy"
             tabIndex={-1}
             scrolling="no"
-            // allow-scripts (and NOT allow-same-origin) lets the deck's React app
-            // run while giving the frame an opaque origin it can't escape from —
-            // with both flags a same-origin frame can delete its own sandbox, so
-            // we deliberately omit allow-same-origin. The deck touches no
-            // localStorage/cookies, so the opaque origin is fine. preview=1
-            // disables the remote bridge and pointer-events:none blocks input.
-            sandbox="allow-scripts"
+            // The preview embeds our OWN deck (first-party, same-origin). It needs
+            // both allow-scripts (it's a React app) AND allow-same-origin — without
+            // the latter the frame gets a null origin and the deck's ES-module
+            // imports become cross-origin fetches the dev server doesn't CORS-allow,
+            // so it renders blank. This pair is escapable in principle, but the
+            // content is trusted; real isolation here is preview=1 (no remote
+            // bridge) + pointer-events:none (no input), not the sandbox. We still
+            // set it to withhold top-navigation/popups as defense-in-depth.
+            sandbox="allow-scripts allow-same-origin"
           />
         </section>
       ) : null}
