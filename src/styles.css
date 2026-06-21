@@ -1054,6 +1054,35 @@ select {
 }
 
 /* Audio player (media runtime test slide) */
+.video-player {
+  background: #05070a;
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.video-player__el {
+  aspect-ratio: 16 / 9;
+  display: block;
+  height: auto;
+  object-fit: var(--video-fit, contain);
+  width: 100%;
+}
+
+.video-player__status {
+  color: rgba(248, 243, 231, 0.7);
+  font-size: 16px;
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.video-player--error {
+  border-color: rgba(220, 110, 110, 0.5);
+}
+
 .audio-player {
   background: rgba(248, 243, 231, 0.06);
   border: 1px solid rgba(248, 243, 231, 0.16);
