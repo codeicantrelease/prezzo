@@ -108,10 +108,10 @@ function NoDecksConfigured() {
 function DeckIndexShell() {
   const defaultDeck = deckConfigs[0];
 
-  if (!defaultDeck) {
-    return <NoDecksConfigured />;
-  }
+  return defaultDeck ? <DeckIndexShellContent defaultDeck={defaultDeck} /> : <NoDecksConfigured />;
+}
 
+function DeckIndexShellContent({ defaultDeck }: { defaultDeck: DeckConfig }) {
   const [selectedDeck, setSelectedDeck] = useState<DeckConfig>(defaultDeck);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [homeRemoteAccess, setHomeRemoteAccess] = useState<RemoteAccessDetails | null>(null);

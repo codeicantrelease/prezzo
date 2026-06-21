@@ -50,6 +50,12 @@ function useScreenWakeLock() {
   }, []);
 }
 
+function deckPathFromRemoteSlug(deckSlug: string) {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(deckSlug)) return null;
+
+  return `/${deckSlug}`;
+}
+
 function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"] }) {
   const deck = useContext(DeckContext);
   const deckRef = useRef(deck);
@@ -125,7 +131,9 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
       }
 
       if (message.type === "open-deck") {
-        window.location.assign(`/${message.deckSlug}`);
+        const deckPath = deckPathFromRemoteSlug(message.deckSlug);
+
+        if (deckPath) window.location.assign(deckPath);
         return;
       }
 
