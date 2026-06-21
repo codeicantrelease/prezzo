@@ -251,8 +251,8 @@ export const deckConfig = {
   slug: "${slug}",
   label: "${label.replaceAll('"', '\\"')}",
   description: "Generated Prezzo deck.",
-  slideCount: 1,
-  presenterNotes: ["Opening promise."],
+  slideCount: 2,
+  presenterNotes: ["Opening promise.", "Audio playback test."],
   component: ${componentName},
   runtime: {
     terminal: {
@@ -295,6 +295,7 @@ ${styleGuide ? `Use: \`${styleGuide}\`` : "No external style guide provided yet.
 ## Run Of Show
 
 1. Opening promise.
+2. Audio playback test.
 
 ## Visual QA
 
