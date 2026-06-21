@@ -262,6 +262,10 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
             loading="lazy"
             tabIndex={-1}
             scrolling="no"
+            // Read-only same-origin mirror: allow the deck's own scripts to run
+            // (it's a React app) but withhold forms, popups, and top-level
+            // navigation. preview=1 already disables the remote bridge.
+            sandbox="allow-scripts allow-same-origin"
           />
         </section>
       ) : null}
