@@ -21,6 +21,11 @@ type VideoPlayerProps = {
   // slide/step state, not by on-screen controls.
   controls?: boolean;
   fit?: "contain" | "cover";
+  // Spectacle keeps every slide mounted, so "auto" would eagerly download every
+  // video in the deck. Default to "metadata" (enough for the poster/dimensions);
+  // the full clip loads when the slide/step triggers play(). Set "auto" only for
+  // a hero clip that must start instantly.
+  preload?: "none" | "metadata" | "auto";
   className?: string;
 };
 
@@ -34,6 +39,7 @@ export function VideoPlayer({
   muted = false,
   controls = false,
   fit = "contain",
+  preload = "metadata",
   className,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -151,7 +157,7 @@ export function VideoPlayer({
         muted={isMuted}
         controls={controls}
         playsInline
-        preload="auto"
+        preload={preload}
         onPlay={() => setStatus("playing")}
         onPause={() => setStatus((current) => (current === "blocked" ? current : "paused"))}
         onEnded={() => setStatus("paused")}
