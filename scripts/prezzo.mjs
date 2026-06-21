@@ -161,7 +161,9 @@ async function createDeck() {
 
   await fs.writeFile(
     path.join(deckPath, "Deck.tsx"),
-    `import { FlexBox, Heading, Slide, Text } from "spectacle";
+    `import { FlexBox, Heading, Notes, Slide, Text } from "spectacle";
+import { AudioPlayer } from "../../src/components/AudioPlayer";
+import { TEST_TONE_DATA_URI } from "../../src/components/testTone";
 import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
 import { PrezzoSpectacleDeck } from "../../src/runtime/PrezzoSpectacleDeck";
 import { prezzoTheme } from "../../src/theme";
@@ -180,6 +182,25 @@ export function ${componentName}({ remote }: PrezzoDeckRuntimeProps) {
           <Text color="rgba(248,243,231,0.78)" fontSize="34px" maxWidth="1060px">
             Replace this starter slide after writing the brief and run of show.
           </Text>
+        </FlexBox>
+      </Slide>
+
+      {/* Audio test slide: a built-in, free-to-use tone (no committed media).
+          Keep or delete once you have wired your own audio. */}
+      <Slide backgroundColor="#101418">
+        <FlexBox className="slide-shell" flexDirection="column" justifyContent="center">
+          <Text className="kicker" color="#f3b23a">
+            Audio test
+          </Text>
+          <Heading fontSize="64px" color="#f8f3e7" margin="8px 0 32px">
+            Free-to-use test tone.
+          </Heading>
+          <AudioPlayer
+            src={TEST_TONE_DATA_URI}
+            subtitle="Built-in · free to use"
+            title="Test tone (440 Hz)"
+          />
+          <Notes>Use this slide to test audio playback and the phone remote's audio controls.</Notes>
         </FlexBox>
       </Slide>
     </PrezzoSpectacleDeck>
