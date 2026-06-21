@@ -88,10 +88,22 @@ async function assertDeck(slug) {
 }
 
 function run(cmd, cmdArgs, env = {}) {
-  const child = spawn(cmd, cmdArgs, {
+  // Put the project's local bin on PATH so `vite`/`remotion` resolve without
+  // relying on npm's lifecycle PATH injection. `shell: true` lets Windows
+  // resolve the `.cmd` shim (a bare spawn("vite") throws ENOENT there).
+  const binDir = path.join(root, "node_modules", ".bin");
+  const pathKey = Object.keys(process.env).find((key) => key.toLowerCase() === "path") ?? "PATH";
+  // Pass a single command string (not an args array) so `shell: true` does not
+  // trigger DEP0190. Args here are internal and space-free, so plain joining is safe.
+  const child = spawn([cmd, ...cmdArgs].join(" "), {
     cwd: root,
-    env: { ...process.env, ...env },
+    env: {
+      ...process.env,
+      ...env,
+      [pathKey]: `${binDir}${path.delimiter}${process.env[pathKey] ?? ""}`,
+    },
     stdio: "inherit",
+    shell: true,
   });
 
   child.on("exit", (code, signal) => {
