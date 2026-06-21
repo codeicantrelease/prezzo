@@ -3,6 +3,9 @@ export type RemoteDeckState = {
   slideIndex: number;
   stepIndex: number;
   updatedAt: number;
+  // The active slide's own <Notes> text, read live from the presenter so the
+  // controller always shows the note for the slide actually on screen.
+  notes?: string;
 };
 
 export type RemoteAudioState = {

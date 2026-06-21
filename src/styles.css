@@ -62,15 +62,36 @@ select {
   padding: 0;
 }
 
+.deck-index li {
+  align-items: stretch;
+  display: flex;
+  gap: 10px;
+}
+
 .deck-index a {
   background: rgba(248, 243, 231, 0.08);
   border: 1px solid rgba(248, 243, 231, 0.16);
   border-radius: 8px;
   color: #f8f3e7;
+  text-decoration: none;
+}
+
+.deck-index__start {
   display: grid;
+  flex: 1;
   gap: 6px;
   padding: 20px 22px;
-  text-decoration: none;
+}
+
+.deck-index__control {
+  align-items: center;
+  color: rgba(248, 243, 231, 0.78);
+  display: flex;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 0 22px;
+  text-transform: uppercase;
 }
 
 .deck-index a:hover {
@@ -80,6 +101,14 @@ select {
 .deck-index span {
   color: rgba(248, 243, 231, 0.7);
   font-size: 20px;
+}
+
+.deck-index small {
+  color: rgba(248, 243, 231, 0.45);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .runtime-timer {
@@ -733,6 +762,46 @@ select {
   transition: width 160ms ease-out;
 }
 
+.remote-control__preview-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 999px;
+  color: rgba(248, 243, 231, 0.78);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 7px;
+  padding: 9px 12px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.remote-control__preview-toggle[aria-pressed="true"] {
+  background: rgba(243, 178, 58, 0.16);
+  border-color: rgba(243, 178, 58, 0.5);
+  color: #f3b23a;
+}
+
+.remote-control__preview {
+  aspect-ratio: 16 / 9;
+  background: #101418;
+  border: 1px solid rgba(248, 243, 231, 0.13);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.remote-control__preview-frame {
+  border: 0;
+  display: block;
+  height: 100%;
+  /* Read-only mirror: taps shouldn't drive the embedded deck. */
+  pointer-events: none;
+  width: 100%;
+}
+
 .remote-control__notes {
   background: rgba(248, 243, 231, 0.07);
   border: 1px solid rgba(248, 243, 231, 0.13);
@@ -756,6 +825,7 @@ select {
   font-size: 22px;
   line-height: 1.35;
   margin: 0;
+  white-space: pre-line;
 }
 
 .remote-control__actions {

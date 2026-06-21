@@ -27,6 +27,7 @@ export type RemotePresenterStateMessage = {
   slideCount: number;
   slideIndex: number;
   stepIndex: number;
+  notes?: string;
   type: "presenter-state";
 };
 

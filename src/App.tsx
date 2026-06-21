@@ -13,7 +13,11 @@ function selectedDeckSlugFromLocation() {
   const queryDeck = params.get("deck");
   const pathDeck = pathSegmentsFromLocation()[0];
 
-  return pathDeck || queryDeck || import.meta.env.VITE_PREZZO_DECK;
+  // No deck in the path/query => show the home index (list of talks). We do NOT
+  // fall back to VITE_PREZZO_DECK here: the root route is the launcher, and decks
+  // are opened by explicit /<slug>/ path. (VITE_PREZZO_DECK still drives the
+  // server-side remotion/studio defaults.)
+  return pathDeck || queryDeck;
 }
 
 function hiddenPageSlugFromLocation() {
@@ -28,9 +32,15 @@ function DeckIndex() {
       <ul>
         {deckConfigs.map((deck) => (
           <li key={deck.slug}>
-            <a href={`/${deck.slug}`}>
+            <a className="deck-index__start" href={`/${deck.slug}`}>
               <strong>{deck.label}</strong>
               <span>{deck.description ?? deck.slug}</span>
+              <small>
+                {deck.slideCount ?? 1} slide{(deck.slideCount ?? 1) === 1 ? "" : "s"}
+              </small>
+            </a>
+            <a className="deck-index__control" href={`/${deck.slug}/control`}>
+              Remote
             </a>
           </li>
         ))}
@@ -77,11 +87,16 @@ export function App() {
     );
   }
 
+  // Preview mode (used by the controller's slide-mirror iframe): render the deck
+  // read-only at the requested slide/step and DON'T connect the remote bridge, so
+  // the embedded copy never registers as a second presenter and fights the real one.
+  const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
+
   return (
     <PresentationShell deck={selectedDeck}>
       <DeckComponent
         remote={{
-          enabled: true,
+          enabled: !previewMode,
           slideCount: selectedDeck.slideCount ?? 1,
           slug: selectedDeck.slug,
         }}
