@@ -34,8 +34,16 @@ select {
 .deck-index {
   background: #101418;
   color: #f8f3e7;
+  display: grid;
+  gap: 42px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  align-items: start;
   min-height: 100vh;
   padding: 72px;
+}
+
+.deck-index__main {
+  min-width: 0;
 }
 
 .deck-index__eyebrow {
@@ -109,6 +117,55 @@ select {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.deck-index__remote {
+  display: grid;
+  justify-items: stretch;
+  margin-top: 6px;
+}
+
+.deck-index__remote-card {
+  border-color: rgba(248, 243, 231, 0.16);
+  box-shadow: none;
+  padding: 26px;
+}
+
+.deck-index__remote-card .remote-access-overlay__copy h2 {
+  font-size: 34px;
+}
+
+.deck-index__remote-card .remote-access-overlay__copy p {
+  font-size: 17px;
+}
+
+.deck-index__remote-card .remote-access-overlay__qr {
+  width: min(100%, 300px);
+}
+
+.deck-index__remote-button {
+  align-items: center;
+  background: rgba(248, 243, 231, 0.08);
+  border: 1px solid rgba(248, 243, 231, 0.16);
+  border-radius: 8px;
+  color: #f8f3e7;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 58px;
+  padding: 12px 18px;
+  text-transform: uppercase;
+}
+
+.deck-index__remote-button:hover {
+  border-color: rgba(243, 178, 58, 0.72);
+}
+
+.deck-index__remote-button:disabled {
+  cursor: default;
+  opacity: 0.48;
 }
 
 .runtime-timer {
@@ -679,7 +736,9 @@ select {
 
 .remote-login button,
 .remote-control__actions button,
-.remote-control__goto button {
+.remote-control__goto button,
+.remote-control__home,
+.remote-control__deck-switch button {
   align-items: center;
   background: #f3b23a;
   border: 0;
@@ -694,7 +753,8 @@ select {
   padding: 12px 16px;
 }
 
-.remote-login button:disabled {
+.remote-login button:disabled,
+.remote-control button:disabled {
   cursor: default;
   opacity: 0.48;
 }
@@ -702,26 +762,43 @@ select {
 .remote-control--active {
   display: grid;
   gap: 18px;
-  grid-template-rows: auto auto minmax(210px, 1fr) auto auto auto;
   margin: 0 auto;
   max-width: 540px;
 }
 
+.remote-control--waiting {
+  align-content: start;
+}
+
 .remote-control__status {
   align-items: center;
-  display: flex;
+  display: grid;
   gap: 14px;
-  justify-content: space-between;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   min-height: 58px;
 }
 
-.remote-control__status div:first-child {
+.remote-control__status div:nth-child(2) {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
-.remote-control__status span {
+.remote-control__home {
+  background: rgba(248, 243, 231, 0.1);
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  color: rgba(248, 243, 231, 0.86);
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.remote-control__home--armed {
+  background: #f3b23a;
+  border-color: #f3b23a;
+  color: #101418;
+}
+
+.remote-control__status div:nth-child(2) span {
   color: rgba(248, 243, 231, 0.6);
   font-size: 13px;
   font-weight: 900;
@@ -762,6 +839,39 @@ select {
   transition: width 160ms ease-out;
 }
 
+.remote-control__deck-switch {
+  align-items: center;
+  background: rgba(248, 243, 231, 0.07);
+  border: 1px solid rgba(248, 243, 231, 0.14);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 12px 14px;
+}
+
+.remote-control__deck-switch label {
+  color: rgba(248, 243, 231, 0.64);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.remote-control__deck-switch select {
+  background: #101418;
+  border: 1px solid rgba(248, 243, 231, 0.18);
+  border-radius: 8px;
+  color: #f8f3e7;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.remote-control__deck-switch button {
+  grid-column: 1 / -1;
+}
+
 .remote-control__preview-toggle {
   align-items: center;
   background: transparent;
@@ -776,6 +886,12 @@ select {
   padding: 9px 12px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.remote-control__preview-toggle {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  justify-content: center;
 }
 
 .remote-control__preview-toggle[aria-pressed="true"] {
@@ -876,16 +992,7 @@ select {
 }
 
 .remote-access-overlay__panel {
-  background: #f8f3e7;
-  border: 1px solid rgba(248, 243, 231, 0.42);
-  border-radius: 8px;
-  box-shadow: 0 28px 110px rgba(0, 0, 0, 0.48);
-  color: #101418;
-  display: grid;
-  gap: 24px;
-  justify-items: center;
   max-width: min(780px, calc(100vw - 72px));
-  padding: 42px;
   position: relative;
   width: 100%;
 }
@@ -905,6 +1012,20 @@ select {
   right: 18px;
   top: 18px;
   width: 44px;
+  z-index: 1;
+}
+
+.remote-access-card {
+  background: #f8f3e7;
+  border: 1px solid rgba(248, 243, 231, 0.42);
+  border-radius: 8px;
+  box-shadow: 0 28px 110px rgba(0, 0, 0, 0.48);
+  color: #101418;
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  padding: 42px;
+  width: 100%;
 }
 
 .remote-access-overlay__copy {
@@ -985,7 +1106,40 @@ select {
   text-align: center;
 }
 
+@media (max-width: 960px) {
+  .deck-index {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .deck-index__remote {
+    max-width: 520px;
+  }
+}
+
 @media (max-width: 430px) {
+  .deck-index {
+    gap: 28px;
+    padding: 36px 22px;
+  }
+
+  .deck-index h1 {
+    font-size: 44px;
+  }
+
+  .deck-index li {
+    display: grid;
+  }
+
+  .deck-index__control {
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .deck-index__remote-card {
+    padding: 22px;
+  }
+
   .remote-control {
     padding-left: max(14px, env(safe-area-inset-left));
     padding-right: max(14px, env(safe-area-inset-right));

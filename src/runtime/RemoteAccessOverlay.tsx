@@ -8,14 +8,13 @@ type RemoteAccessOverlayProps = {
   onClose: () => void;
 };
 
-export function RemoteAccessOverlay({ access, onClose }: RemoteAccessOverlayProps) {
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+type RemoteAccessCardProps = {
+  access: RemoteAccessDetails;
+  className?: string;
+};
 
-  useEffect(() => {
-    closeButtonRef.current?.focus();
-  }, []);
+export function RemoteAccessCard({ access, className = "" }: RemoteAccessCardProps) {
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -41,6 +40,38 @@ export function RemoteAccessOverlay({ access, onClose }: RemoteAccessOverlayProp
       isMounted = false;
     };
   }, [access.remoteUrl]);
+
+  return (
+    <div className={`remote-access-card ${className}`.trim()}>
+      <div className="remote-access-overlay__copy">
+        <span>Remote control</span>
+        <h2>Scan to control this deck</h2>
+        <p>The QR opens the phone controller and signs in with this session PIN.</p>
+      </div>
+      <div className="remote-access-overlay__qr">
+        {qrCodeUrl === "error" ? (
+          <span>Failed to generate QR code</span>
+        ) : qrCodeUrl ? (
+          <img alt="Remote control QR code" src={qrCodeUrl} />
+        ) : (
+          <span>Generating QR</span>
+        )}
+      </div>
+      <div className="remote-access-overlay__details">
+        <span>PIN {access.pin}</span>
+        <strong>{access.remoteUrl}</strong>
+      </div>
+    </div>
+  );
+}
+
+export function RemoteAccessOverlay({ access, onClose }: RemoteAccessOverlayProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -91,24 +122,7 @@ export function RemoteAccessOverlay({ access, onClose }: RemoteAccessOverlayProp
         >
           <X size={24} />
         </button>
-        <div className="remote-access-overlay__copy">
-          <span>Remote control</span>
-          <h2>Scan to control this deck</h2>
-          <p>The QR opens the phone controller and signs in with this session PIN.</p>
-        </div>
-        <div className="remote-access-overlay__qr">
-          {qrCodeUrl === "error" ? (
-            <span>Failed to generate QR code</span>
-          ) : qrCodeUrl ? (
-            <img alt="Remote control QR code" src={qrCodeUrl} />
-          ) : (
-            <span>Generating QR</span>
-          )}
-        </div>
-        <div className="remote-access-overlay__details">
-          <span>PIN {access.pin}</span>
-          <strong>{access.remoteUrl}</strong>
-        </div>
+        <RemoteAccessCard access={access} />
       </div>
     </section>
   );

@@ -7,13 +7,16 @@ import type { FocusTimerControls, TimerControls, TimerState } from "./Presentati
 import { RuntimeTimer } from "./RuntimeTimer";
 
 type QuakeTerminalProps = {
+  availableDecks?: DeckConfig[];
   deck: DeckConfig;
   focusTimerControls: FocusTimerControls;
   hasTimer: boolean;
   isOpen: boolean;
   onClose: () => void;
   onOpen: () => void;
+  onSelectDeck?: (deck: DeckConfig) => void;
   onShowRemoteAccess: (access: RemoteAccessDetails) => void;
+  sessionRemote?: boolean;
   timer: TimerState;
   timerControls: TimerControls;
 };
@@ -166,13 +169,16 @@ function applyVimOperator(operator: VimOperator, motion: string, value: string, 
 }
 
 export function QuakeTerminal({
+  availableDecks = [],
   deck,
   focusTimerControls,
   hasTimer,
   isOpen,
   onClose,
   onOpen,
+  onSelectDeck,
   onShowRemoteAccess,
+  sessionRemote = false,
   timer,
   timerControls,
 }: QuakeTerminalProps) {
@@ -189,6 +195,9 @@ export function QuakeTerminal({
   const inputRef = useRef<HTMLInputElement>(null);
   const vimModeLabel = vimEnabled ? vimInputMode.toUpperCase() : "OFF";
   const hasBlackjack = Boolean(deck.runtime?.hiddenPages?.blackjack?.enabled);
+  const selectableDecks = availableDecks.length > 0 ? availableDecks : [deck];
+
+  const findSelectableDeck = (slug: string) => selectableDecks.find((candidate) => candidate.slug === slug);
 
   const setInputSelection = (input: HTMLInputElement, cursor: number, value: string) => {
     const nextCursor = vimEnabled && vimInputMode === "normal" ? normalCursor(cursor, value) : clampCursor(cursor, value);
@@ -264,16 +273,17 @@ export function QuakeTerminal({
         return "closed";
       },
       deck: () => `${deck.slug} - ${deck.label}`,
+      decks: () => selectableDecks.map((candidate) => candidate.slug).join(", "),
       help: () => {
         const blackjack = hasBlackjack ? "blackjack, " : "";
 
         return hasTimer
-          ? `commands: help, deck, remote, pin, dubdubtok, ${blackjack}vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close`
-          : `commands: help, deck, remote, pin, dubdubtok, ${blackjack}vim, vim on, vim off, goto 3, clear, close`;
+          ? `commands: help, decks, deck, deck <slug>, remote, remote <slug>, pin, pin <slug>, dubdubtok, ${blackjack}vim, vim on, vim off, timer, timer 2m, timer start, timer start 90s, timer stop, timer pause, timer resume, timer reset, timer elapsed, timer countdown 20m, goto 3, clear, close`
+          : `commands: help, decks, deck, deck <slug>, remote, remote <slug>, pin, pin <slug>, dubdubtok, ${blackjack}vim, vim on, vim off, goto 3, clear, close`;
       },
       timer: () => formatTimer(timer),
     }),
-    [deck.label, deck.slug, hasBlackjack, hasTimer, onClose, timer],
+    [deck.label, deck.slug, hasBlackjack, hasTimer, onClose, selectableDecks, timer],
   );
 
   const runCommand = (rawCommand: string) => {
@@ -289,6 +299,14 @@ export function QuakeTerminal({
 
     const [base, ...rest] = input.split(/\s+/);
     let output = "";
+
+    if (base === "deck" && rest[0]) {
+      const nextDeck = findSelectableDeck(rest[0]);
+      output = nextDeck ? `selected ${nextDeck.slug} - ${nextDeck.label}` : `unknown deck: ${rest[0]}`;
+      setHistory((current) => [...current, `> ${input}`, output]);
+      if (nextDeck) onSelectDeck?.(nextDeck);
+      return;
+    }
 
     if (base === "dubdubtok") {
       const page = deck.runtime?.hiddenPages?.dubdubtok;
@@ -314,8 +332,14 @@ export function QuakeTerminal({
     }
 
     if (base === "remote") {
+      const targetDeck = rest[0] ? findSelectableDeck(rest[0]) : deck;
+      if (!targetDeck) {
+        setHistory((current) => [...current, `> ${input}`, `unknown deck: ${rest[0]}`]);
+        return;
+      }
+
       setHistory((current) => [...current, `> ${input}`, "opening remote control QR"]);
-      void fetchRemoteAccess(deck.slug)
+      void fetchRemoteAccess(sessionRemote && !rest[0] ? undefined : targetDeck.slug)
         .then((access) => {
           onShowRemoteAccess(access);
           setHistory((current) => [...current, `remote URL: ${access.remoteUrl}`]);
@@ -330,8 +354,14 @@ export function QuakeTerminal({
     }
 
     if (base === "pin") {
+      const targetDeck = rest[0] ? findSelectableDeck(rest[0]) : deck;
+      if (!targetDeck) {
+        setHistory((current) => [...current, `> ${input}`, `unknown deck: ${rest[0]}`]);
+        return;
+      }
+
       setHistory((current) => [...current, `> ${input}`, "retrieving remote PIN"]);
-      void fetchRemoteAccess(deck.slug)
+      void fetchRemoteAccess(sessionRemote && !rest[0] ? undefined : targetDeck.slug)
         .then((access) => {
           const phoneUrl = access.controlUrls[0] ?? access.remoteUrl;
 

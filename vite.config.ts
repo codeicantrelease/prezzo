@@ -7,12 +7,14 @@ import type { Duplex } from "node:stream";
 import { WebSocket, WebSocketServer } from "ws";
 import type { RemoteAudioState, RemoteDeckState } from "./src/runtime/remote-types";
 
-type RemoteClientRole = "controller" | "presenter";
+type RemoteClientRole = "controller" | "launcher" | "presenter";
 
 type RemoteClient = {
   deckSlug: string;
   role: RemoteClientRole;
 };
+
+type PresenterSurface = "deck" | "home";
 
 function readRequestBody(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
@@ -45,12 +47,13 @@ function getLanAddresses() {
     .map((entry) => entry.address);
 }
 
-function controlUrlsForRequest(req: IncomingMessage, deckSlug: string) {
+function controlUrlsForRequest(req: IncomingMessage, deckSlug?: string) {
   const hostHeader = req.headers.host ?? "localhost:5173";
   const port = hostHeader.includes(":") ? hostHeader.split(":").at(-1) : "5173";
-  const lanUrls = getLanAddresses().map((address) => `http://${address}:${port}/${deckSlug}/control`);
+  const controlPath = deckSlug ? `/${deckSlug}/control` : "/control";
+  const lanUrls = getLanAddresses().map((address) => `http://${address}:${port}${controlPath}`);
 
-  return lanUrls.length > 0 ? lanUrls : [`http://${hostHeader}/${deckSlug}/control`];
+  return lanUrls.length > 0 ? lanUrls : [`http://${hostHeader}${controlPath}`];
 }
 
 function prezzoRemoteControlPlugin() {
@@ -61,6 +64,11 @@ function prezzoRemoteControlPlugin() {
   const deckStates = new Map<string, RemoteDeckState>();
   const audioStates = new Map<string, RemoteAudioState | null>();
   const wss = new WebSocketServer({ noServer: true });
+  let activeDeckSlug = process.env.VITE_PREZZO_DECK ?? "prezzo-demo";
+  let presenterSurface: PresenterSurface = "home";
+  let pendingOpenDeckSlug: string | null = null;
+  let pendingOpenDeckUntil = 0;
+  let pendingHomeUntil = 0;
 
   const broadcast = (deckSlug: string, payload: unknown, roles?: RemoteClientRole[]) => {
     const message = JSON.stringify(payload);
@@ -77,12 +85,53 @@ function prezzoRemoteControlPlugin() {
     [...clients.values()].filter((client) => client.deckSlug === deckSlug && client.role === "presenter").length;
   const controllerCount = (deckSlug: string) =>
     [...clients.values()].filter((client) => client.deckSlug === deckSlug && client.role === "controller").length;
+  const launcherCount = () => [...clients.values()].filter((client) => client.role === "launcher").length;
   const broadcastConnections = (deckSlug: string) =>
     broadcast(deckSlug, {
       controllers: controllerCount(deckSlug),
       presenters: presenterCount(deckSlug),
       type: "connections",
     });
+  const broadcastToRoles = (payload: unknown, roles: RemoteClientRole[]) => {
+    const message = JSON.stringify(payload);
+
+    for (const [client, meta] of clients) {
+      if (!roles.includes(meta.role)) continue;
+      if (client.readyState !== client.OPEN) continue;
+
+      client.send(message);
+    }
+  };
+  const broadcastLauncherConnections = () =>
+    broadcastToRoles(
+      {
+        controllers: controllerCount(activeDeckSlug),
+        presenters: presenterCount(activeDeckSlug),
+        type: "connections",
+      },
+      ["launcher"],
+    );
+  const setPresenterSurface = (surface: PresenterSurface) => {
+    if (presenterSurface === surface) return;
+
+    presenterSurface = surface;
+    broadcastToRoles({ surface, type: "presenter-surface" }, ["controller", "launcher"]);
+  };
+  const retargetControllers = (deckSlug: string) => {
+    activeDeckSlug = deckSlug;
+
+    for (const [client, meta] of clients) {
+      if (meta.role !== "controller" || client.readyState !== client.OPEN) continue;
+
+      meta.deckSlug = deckSlug;
+      client.send(JSON.stringify({ deckSlug, type: "active-deck" }));
+      client.send(JSON.stringify({ state: deckStates.get(deckSlug) ?? null, type: "state" }));
+      client.send(JSON.stringify({ audio: audioStates.get(deckSlug) ?? null, type: "audio-state" }));
+    }
+
+    broadcastConnections(deckSlug);
+    broadcastLauncherConnections();
+  };
 
   return {
     name: "prezzo-remote-control",
@@ -111,7 +160,7 @@ function prezzoRemoteControlPlugin() {
             return;
           }
 
-          const deckSlug = requestUrl.searchParams.get("deck") ?? process.env.VITE_PREZZO_DECK ?? "prezzo-demo";
+          const deckSlug = requestUrl.searchParams.get("deck") ?? undefined;
           const controlUrls = controlUrlsForRequest(req, deckSlug);
           const remoteUrl = new URL(controlUrls[0]);
           remoteUrl.searchParams.set("pin", pin);
@@ -131,16 +180,19 @@ function prezzoRemoteControlPlugin() {
               pin?: string;
             };
 
-            if (!payload.deckSlug || payload.pin !== pin) {
+            if (payload.pin !== pin) {
               sendJson(res, 401, { error: "Invalid PIN." });
               return;
             }
 
+            const deckSlug = payload.deckSlug || activeDeckSlug;
             const token = crypto.randomUUID();
             tokens.add(token);
 
             sendJson(res, 200, {
-              state: deckStates.get(payload.deckSlug) ?? null,
+              activeDeckSlug: deckSlug,
+              presenterSurface,
+              state: deckStates.get(deckSlug) ?? null,
               token,
             });
           } catch {
@@ -165,11 +217,11 @@ function prezzoRemoteControlPlugin() {
 
       wss.on("connection", (ws, req) => {
         const requestUrl = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
-        const deckSlug = requestUrl.searchParams.get("deck") ?? "";
+        const deckSlug = requestUrl.searchParams.get("deck") ?? activeDeckSlug;
         const role = requestUrl.searchParams.get("role") as RemoteClientRole | null;
         const token = requestUrl.searchParams.get("token");
 
-        if (!deckSlug || (role !== "controller" && role !== "presenter")) {
+        if (!deckSlug || (role !== "controller" && role !== "launcher" && role !== "presenter")) {
           ws.close(1008, "Missing remote role or deck.");
           return;
         }
@@ -183,18 +235,48 @@ function prezzoRemoteControlPlugin() {
           clientTokens.set(ws, token);
         }
 
-        clients.set(ws, { deckSlug, role });
+        clients.set(ws, { deckSlug: role === "controller" ? activeDeckSlug : deckSlug, role });
         ws.send(
           JSON.stringify({
-            state: deckStates.get(deckSlug) ?? null,
+            state: deckStates.get(role === "controller" ? activeDeckSlug : deckSlug) ?? null,
             type: "hello",
           }),
         );
 
-        broadcastConnections(deckSlug);
+        if (role === "presenter") {
+          if (Date.now() < pendingHomeUntil) {
+            ws.send(JSON.stringify({ type: "open-home" }));
+          } else {
+            setPresenterSurface("deck");
+            retargetControllers(deckSlug);
+          }
+        } else if (role === "controller") {
+          ws.send(JSON.stringify({ deckSlug: activeDeckSlug, type: "active-deck" }));
+          ws.send(JSON.stringify({ surface: presenterSurface, type: "presenter-surface" }));
+          broadcastConnections(activeDeckSlug);
+          broadcastLauncherConnections();
+        } else {
+          if (presenterCount(activeDeckSlug) === 0 && Date.now() >= pendingOpenDeckUntil) {
+            setPresenterSurface("home");
+          }
+          ws.send(JSON.stringify({ deckSlug: activeDeckSlug, type: "active-deck" }));
+          ws.send(JSON.stringify({ surface: presenterSurface, type: "presenter-surface" }));
+          if (pendingOpenDeckSlug && Date.now() < pendingOpenDeckUntil) {
+            ws.send(JSON.stringify({ deckSlug: pendingOpenDeckSlug, type: "open-deck" }));
+            pendingOpenDeckSlug = null;
+            pendingOpenDeckUntil = 0;
+          }
+          ws.send(
+            JSON.stringify({
+              controllers: controllerCount(activeDeckSlug),
+              presenters: presenterCount(activeDeckSlug),
+              type: "connections",
+            }),
+          );
+        }
 
         if (role === "controller") {
-          ws.send(JSON.stringify({ audio: audioStates.get(deckSlug) ?? null, type: "audio-state" }));
+          ws.send(JSON.stringify({ audio: audioStates.get(activeDeckSlug) ?? null, type: "audio-state" }));
         }
 
         ws.on("message", (raw) => {
@@ -208,6 +290,7 @@ function prezzoRemoteControlPlugin() {
             slideCount?: number;
             slideIndex?: number;
             stepIndex?: number;
+            deckSlug?: string;
             type?: string;
             value?: number;
           };
@@ -219,6 +302,8 @@ function prezzoRemoteControlPlugin() {
           }
 
           if (meta.role === "presenter" && message.type === "presenter-state") {
+            if (activeDeckSlug !== meta.deckSlug) retargetControllers(meta.deckSlug);
+
             const nextState = {
               slideCount: Math.max(1, Number(message.slideCount) || 1),
               slideIndex: Math.max(0, Number(message.slideIndex) || 0),
@@ -229,6 +314,25 @@ function prezzoRemoteControlPlugin() {
 
             deckStates.set(meta.deckSlug, nextState);
             broadcast(meta.deckSlug, { state: nextState, type: "state" }, ["controller"]);
+            return;
+          }
+
+          if (meta.role === "controller" && message.type === "open-deck" && typeof message.deckSlug === "string") {
+            pendingOpenDeckSlug = message.deckSlug;
+            pendingOpenDeckUntil = Date.now() + 5000;
+            pendingHomeUntil = 0;
+            setPresenterSurface("deck");
+            retargetControllers(message.deckSlug);
+            broadcastToRoles({ deckSlug: message.deckSlug, type: "open-deck" }, ["launcher", "presenter"]);
+            return;
+          }
+
+          if (meta.role === "controller" && message.type === "open-home") {
+            pendingOpenDeckSlug = null;
+            pendingOpenDeckUntil = 0;
+            pendingHomeUntil = Date.now() + 5000;
+            setPresenterSurface("home");
+            broadcastToRoles({ type: "open-home" }, ["launcher", "presenter"]);
             return;
           }
 
@@ -277,7 +381,12 @@ function prezzoRemoteControlPlugin() {
           }
 
           if (meta) {
+            if (meta.role === "presenter" && presenterCount(meta.deckSlug) === 0 && launcherCount() > 0) {
+              setPresenterSurface("home");
+            }
+
             broadcastConnections(meta.deckSlug);
+            broadcastLauncherConnections();
           }
         });
       });

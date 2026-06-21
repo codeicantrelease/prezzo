@@ -16,7 +16,43 @@ export type RemoteAccessDetails = {
   remoteUrl: string;
 };
 
-export type RemoteControlCommand = {
+export type RemotePresenterSurface = "deck" | "home";
+
+export type RemoteControlCommand =
+  | {
+      command: "goto" | "next" | "previous";
+      slideIndex?: number;
+      stepIndex?: number;
+      type: "control";
+    }
+  | {
+      deckSlug: string;
+      type: "open-deck";
+    }
+  | {
+      type: "open-home";
+    };
+
+export type RemoteActiveDeckMessage = {
+  deckSlug: string;
+  type: "active-deck";
+};
+
+export type RemoteOpenDeckMessage = {
+  deckSlug: string;
+  type: "open-deck";
+};
+
+export type RemoteOpenHomeMessage = {
+  type: "open-home";
+};
+
+export type RemotePresenterSurfaceMessage = {
+  surface: RemotePresenterSurface;
+  type: "presenter-surface";
+};
+
+export type RemoteSlideControlMessage = {
   command: "goto" | "next" | "previous";
   slideIndex?: number;
   stepIndex?: number;
@@ -42,6 +78,10 @@ export type RemoteServerMessage =
       stepIndex?: number;
       type: "control";
     }
+  | RemoteActiveDeckMessage
+  | RemoteOpenDeckMessage
+  | RemoteOpenHomeMessage
+  | RemotePresenterSurfaceMessage
   | {
       controllers: number;
       presenters: number;
@@ -67,7 +107,7 @@ export const REMOTE_CONTROLLER_CONNECTED_EVENT = "prezzo:remote-controller-conne
 export const REMOTE_AUDIO_STATE_EVENT = "prezzo:audio-state";
 export const REMOTE_AUDIO_COMMAND_EVENT = "prezzo:audio-command";
 
-export function remoteWebSocketUrl(deckSlug: string, role: "controller" | "presenter", token?: string) {
+export function remoteWebSocketUrl(deckSlug: string, role: "controller" | "launcher" | "presenter", token?: string) {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const params = new URLSearchParams({
     deck: deckSlug,
@@ -98,9 +138,10 @@ export async function fetchRemotePin() {
   }
 }
 
-export async function fetchRemoteAccess(deckSlug: string) {
+export async function fetchRemoteAccess(deckSlug?: string) {
   try {
-    const response = await fetch(`/__prezzo_remote/access?deck=${encodeURIComponent(deckSlug)}`);
+    const query = deckSlug ? `?deck=${encodeURIComponent(deckSlug)}` : "";
+    const response = await fetch(`/__prezzo_remote/access${query}`);
     const payload = (await response.json()) as RemoteAccessDetails & { error?: string };
 
     if (!response.ok || !payload.remoteUrl || !payload.pin || !Array.isArray(payload.controlUrls)) {

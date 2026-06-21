@@ -1,4 +1,17 @@
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Lock, MonitorDot, Pause, Play, Send, Volume2, VolumeX } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Home,
+  Lock,
+  MonitorDot,
+  Pause,
+  Play,
+  Send,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { DeckConfig } from "../deck-types";
@@ -8,7 +21,9 @@ import type {
   RemoteAudioState,
   RemoteControlCommand,
   RemoteDeckState,
+  RemotePresenterSurface,
   RemoteServerMessage,
+  RemoteSlideControlMessage,
 } from "./remote-control";
 
 function formatTime(seconds: number) {
@@ -19,6 +34,8 @@ function formatTime(seconds: number) {
 
 type RemoteControllerPageProps = {
   deck: DeckConfig;
+  decks?: DeckConfig[];
+  session?: boolean;
 };
 
 type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
@@ -29,20 +46,28 @@ function clampSlideIndex(value: number, deck: DeckConfig) {
   return Math.max(0, Math.min(value, maxIndex));
 }
 
-export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
+export function RemoteControllerPage({ deck: initialDeck, decks = [initialDeck], session = false }: RemoteControllerPageProps) {
+  const [deck, setDeck] = useState(initialDeck);
   const [pin, setPin] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("idle");
+  const [wsReady, setWsReady] = useState(false);
   const [error, setError] = useState("");
   const [state, setState] = useState<RemoteDeckState | null>(null);
   const [audio, setAudio] = useState<RemoteAudioState | null>(null);
+  const [presenterSurface, setPresenterSurface] = useState<RemotePresenterSurface>("home");
   const [presenterCount, setPresenterCount] = useState(0);
   const [gotoValue, setGotoValue] = useState("1");
+  const [isHomeArmed, setIsHomeArmed] = useState(false);
   // Live slide-mirror preview, off by default (opt-in: it loads the full deck in
   // an iframe and reloads on each navigation, which costs bandwidth/battery).
   const [showPreview, setShowPreview] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const autoConnectPinRef = useRef<string | null>(null);
+  const deckRef = useRef(deck);
+  const isHomeSurface = presenterSurface === "home";
+  const hasLiveDeck = presenterSurface === "deck" && presenterCount > 0;
+  const isDeckPending = presenterSurface === "deck" && presenterCount === 0;
   const slideCount = state?.slideCount ?? deck.slideCount ?? 1;
   const currentSlideIndex = clampSlideIndex(state?.slideIndex ?? 0, deck);
   const currentSlideNumber = currentSlideIndex + 1;
@@ -61,11 +86,26 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   const previewKey = `${currentSlideIndex}-${currentStepIndex}`;
   const previewSrc = `/${deck.slug}/?slideIndex=${currentSlideIndex}&stepIndex=${currentStepIndex}&preview=1`;
 
+  deckRef.current = deck;
+
   const progress = useMemo(() => {
     if (slideCount <= 1) return 100;
 
     return Math.round((currentSlideIndex / (slideCount - 1)) * 100);
   }, [currentSlideIndex, slideCount]);
+
+  useEffect(() => {
+    if (!isHomeArmed) return undefined;
+
+    const timeout = window.setTimeout(() => setIsHomeArmed(false), 2400);
+    return () => window.clearTimeout(timeout);
+  }, [isHomeArmed]);
+
+  useEffect(() => {
+    if (hasLiveDeck) return;
+
+    setShowPreview(false);
+  }, [hasLiveDeck]);
 
   const connectWithPin = async (nextPin: string) => {
     setStatus("connecting");
@@ -73,14 +113,16 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
 
     try {
       const response = await fetch("/__prezzo_remote/connect", {
-        body: JSON.stringify({ deckSlug: deck.slug, pin: nextPin }),
+        body: JSON.stringify({ deckSlug: session ? undefined : deck.slug, pin: nextPin }),
         headers: {
           "content-type": "application/json",
         },
         method: "POST",
       });
       const payload = (await response.json()) as {
+        activeDeckSlug?: string;
         error?: string;
+        presenterSurface?: RemotePresenterSurface;
         state?: RemoteDeckState | null;
         token?: string;
       };
@@ -89,6 +131,10 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
         throw new Error(payload.error ?? "Invalid PIN.");
       }
 
+      const activeDeck = payload.activeDeckSlug ? decks.find((candidate) => candidate.slug === payload.activeDeckSlug) : null;
+
+      if (activeDeck) setDeck(activeDeck);
+      if (payload.presenterSurface) setPresenterSurface(payload.presenterSurface);
       setToken(payload.token);
       setState(payload.state ?? null);
       setStatus("connected");
@@ -111,12 +157,14 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   useEffect(() => {
     if (!token) return undefined;
 
-    const ws = new WebSocket(remoteWebSocketUrl(deck.slug, "controller", token));
+    const ws = new WebSocket(remoteWebSocketUrl(deckRef.current.slug, "controller", token));
     wsRef.current = ws;
     setStatus("connecting");
+    setWsReady(false);
 
     ws.addEventListener("open", () => {
       setStatus("connected");
+      setWsReady(true);
       setError("");
     });
 
@@ -135,6 +183,33 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
         setGotoValue(String(message.state.slideIndex + 1));
       }
 
+      if ((message.type === "hello" || message.type === "state") && !message.state) {
+        setState(null);
+        setGotoValue("1");
+      }
+
+      if (message.type === "active-deck") {
+        const activeDeck = decks.find((candidate) => candidate.slug === message.deckSlug);
+
+        if (activeDeck) {
+          setDeck(activeDeck);
+          setState(null);
+          setAudio(null);
+          setGotoValue("1");
+        }
+      }
+
+      if (message.type === "presenter-surface") {
+        setPresenterSurface(message.surface);
+
+        if (message.surface === "home") {
+          setPresenterCount(0);
+          setState(null);
+          setAudio(null);
+          setGotoValue("1");
+        }
+      }
+
       if (message.type === "connections") {
         setPresenterCount(message.presenters);
       }
@@ -146,10 +221,12 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
 
     ws.addEventListener("close", () => {
       if (wsRef.current === ws) wsRef.current = null;
+      setWsReady(false);
       setStatus((current) => (current === "connected" ? "idle" : current));
     });
 
     ws.addEventListener("error", () => {
+      setWsReady(false);
       setStatus("error");
       setError("Connection lost. Re-enter the PIN to reconnect.");
     });
@@ -157,17 +234,18 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
     return () => {
       ws.close();
       if (wsRef.current === ws) wsRef.current = null;
+      setWsReady(false);
     };
-  }, [deck.slug, token]);
+  }, [decks, token]);
 
   const connect = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void connectWithPin(pin);
   };
 
-  const sendControl = (command: RemoteControlCommand["command"], slideIndex?: number) => {
+  const sendControl = (command: RemoteSlideControlMessage["command"], slideIndex?: number) => {
     const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
 
     ws.send(
       JSON.stringify({
@@ -175,6 +253,48 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
         slideIndex,
         stepIndex: 0,
         type: "control",
+      } satisfies RemoteControlCommand),
+    );
+  };
+
+  const openDeck = (deckSlug: string) => {
+    const nextDeck = decks.find((candidate) => candidate.slug === deckSlug);
+    const ws = wsRef.current;
+
+    if (!nextDeck) return;
+
+    setDeck(nextDeck);
+    setPresenterSurface("deck");
+    setState(null);
+    setAudio(null);
+    setGotoValue("1");
+
+    if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    ws.send(
+      JSON.stringify({
+        deckSlug,
+        type: "open-deck",
+      } satisfies RemoteControlCommand),
+    );
+  };
+
+  const openHome = () => {
+    const ws = wsRef.current;
+
+    setIsHomeArmed(false);
+    setPresenterSurface("home");
+    setPresenterCount(0);
+    setState(null);
+    setAudio(null);
+    setShowPreview(false);
+    setGotoValue("1");
+
+    if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    ws.send(
+      JSON.stringify({
+        type: "open-home",
       } satisfies RemoteControlCommand),
     );
   };
@@ -190,7 +310,7 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
 
   const sendAudioControl = (command: RemoteAudioCommand, value?: number) => {
     const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
 
     ws.send(JSON.stringify({ command, type: "audio-control", value }));
   };
@@ -225,34 +345,82 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   }
 
   return (
-    <main className="remote-control remote-control--active">
+    <main className={`remote-control remote-control--active ${hasLiveDeck ? "" : "remote-control--waiting"}`}>
       <section className="remote-control__status">
+        <button
+          aria-label={isHomeArmed ? "Confirm return presenter to deck selector" : "Return presenter to deck selector"}
+          className={`remote-control__home ${isHomeArmed ? "remote-control__home--armed" : ""}`}
+          disabled={!wsReady}
+          onClick={() => {
+            if (!isHomeArmed) {
+              setIsHomeArmed(true);
+              return;
+            }
+
+            openHome();
+          }}
+          type="button"
+        >
+          <Home size={18} />
+          <span>{isHomeArmed ? "Confirm" : "Home"}</span>
+        </button>
         <div>
           <span>{deck.label}</span>
-          <strong>
-            {currentSlideNumber} / {slideCount}
-          </strong>
+          <strong>{hasLiveDeck ? `${currentSlideNumber} / ${slideCount}` : isHomeSurface ? "Pick deck" : "Opening"}</strong>
         </div>
         <div className="remote-control__presenter">
           <MonitorDot size={18} />
-          <span>{presenterCount > 0 ? "Live" : "Waiting"}</span>
+          <span>{hasLiveDeck ? "Live" : isDeckPending ? "Opening" : "Waiting"}</span>
         </div>
-        <button
-          className="remote-control__preview-toggle"
-          type="button"
-          aria-pressed={showPreview}
-          onClick={() => setShowPreview((value) => !value)}
-        >
-          {showPreview ? <EyeOff size={18} /> : <Eye size={18} />}
-          <span>{showPreview ? "Hide slide" : "Show slide"}</span>
-        </button>
+        {hasLiveDeck ? (
+          <button
+            className="remote-control__preview-toggle"
+            type="button"
+            aria-pressed={showPreview}
+            onClick={() => setShowPreview((value) => !value)}
+          >
+            {showPreview ? <EyeOff size={18} /> : <Eye size={18} />}
+            <span>{showPreview ? "Hide slide" : "Show slide"}</span>
+          </button>
+        ) : null}
       </section>
 
-      <div className="remote-control__progress" aria-hidden="true">
-        <span style={{ width: `${progress}%` }} />
-      </div>
+      {isHomeSurface ? (
+        <section className="remote-control__deck-switch" aria-label="Deck selector">
+          <label htmlFor="remote-deck">Deck</label>
+          <select
+            id="remote-deck"
+            onChange={(event) => {
+              const nextDeck = decks.find((candidate) => candidate.slug === event.target.value);
 
-      {showPreview ? (
+              if (!nextDeck) return;
+
+              setDeck(nextDeck);
+              setState(null);
+              setAudio(null);
+              setGotoValue("1");
+            }}
+            value={deck.slug}
+          >
+            {decks.map((candidate) => (
+              <option key={candidate.slug} value={candidate.slug}>
+                {candidate.label}
+              </option>
+            ))}
+          </select>
+          <button disabled={!wsReady} onClick={() => openDeck(deck.slug)} type="button">
+            Open deck
+          </button>
+        </section>
+      ) : null}
+
+      {hasLiveDeck ? (
+        <div className="remote-control__progress" aria-hidden="true">
+          <span style={{ width: `${progress}%` }} />
+        </div>
+      ) : null}
+
+      {hasLiveDeck && showPreview ? (
         <section className="remote-control__preview" aria-label="Current slide preview">
           <iframe
             key={previewKey}
@@ -275,23 +443,27 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
         </section>
       ) : null}
 
-      <section className="remote-control__notes" aria-live="polite">
-        <span>Notes</span>
-        <p>{notes}</p>
-      </section>
+      {hasLiveDeck ? (
+        <>
+          <section className="remote-control__notes" aria-live="polite">
+            <span>Notes</span>
+            <p>{notes}</p>
+          </section>
 
-      <section className="remote-control__actions" aria-label="Slide controls">
-        <button onClick={() => sendControl("previous")} type="button">
-          <ChevronLeft size={30} />
-          <span>Previous</span>
-        </button>
-        <button onClick={() => sendControl("next")} type="button">
-          <span>Next</span>
-          <ChevronRight size={30} />
-        </button>
-      </section>
+          <section className="remote-control__actions" aria-label="Slide controls">
+            <button disabled={!wsReady} onClick={() => sendControl("previous")} type="button">
+              <ChevronLeft size={30} />
+              <span>Previous</span>
+            </button>
+            <button disabled={!wsReady} onClick={() => sendControl("next")} type="button">
+              <span>Next</span>
+              <ChevronRight size={30} />
+            </button>
+          </section>
+        </>
+      ) : null}
 
-      {showAudio && audio ? (
+      {hasLiveDeck && showAudio && audio ? (
         <section className="remote-audio" aria-label="Audio controls">
           <div className="remote-audio__meta">
             <span>Audio</span>
@@ -351,19 +523,21 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
         </section>
       ) : null}
 
-      <form className="remote-control__goto" onSubmit={gotoSlide}>
-        <label htmlFor="remote-goto">Slide</label>
-        <input
-          id="remote-goto"
-          inputMode="numeric"
-          max={slideCount}
-          min={1}
-          onChange={(event) => setGotoValue(event.target.value.replace(/\D/g, ""))}
-          type="number"
-          value={gotoValue}
-        />
-        <button type="submit">Go</button>
-      </form>
+      {hasLiveDeck ? (
+        <form className="remote-control__goto" onSubmit={gotoSlide}>
+          <label htmlFor="remote-goto">Slide</label>
+          <input
+            id="remote-goto"
+            inputMode="numeric"
+            max={slideCount}
+            min={1}
+            onChange={(event) => setGotoValue(event.target.value.replace(/\D/g, ""))}
+            type="number"
+            value={gotoValue}
+          />
+        <button disabled={!wsReady} type="submit">Go</button>
+        </form>
+      ) : null}
 
       {error ? <p className="remote-control__error">{error}</p> : null}
     </main>

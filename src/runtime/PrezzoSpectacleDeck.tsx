@@ -124,6 +124,16 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
         return;
       }
 
+      if (message.type === "open-deck") {
+        window.location.assign(`/${message.deckSlug}`);
+        return;
+      }
+
+      if (message.type === "open-home") {
+        window.location.assign("/");
+        return;
+      }
+
       const currentDeck = deckRef.current;
 
       if (!currentDeck?.initialized) return;
