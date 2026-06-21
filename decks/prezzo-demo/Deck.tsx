@@ -12,6 +12,7 @@ import {
   UnorderedList,
 } from "spectacle";
 import { AudioPlayer } from "../../src/components/AudioPlayer";
+import { TEST_TONE_DATA_URI } from "../../src/components/testTone";
 import { InsightChart } from "../../src/components/InsightChart";
 import { MotionBadge } from "../../src/components/MotionBadge";
 import type { PrezzoDeckRuntimeProps } from "../../src/deck-types";
@@ -181,20 +182,21 @@ export function PrezzoDeck({ remote }: PrezzoDeckRuntimeProps) {
             Audio that starts on cue.
           </Heading>
           <Text color="rgba(248,243,231,0.75)" fontSize="30px" maxWidth="980px" margin="0 0 40px">
-            A slide can own a real audio element. This one tries to autostart the moment
-            it becomes active, and falls back to a play control if the browser blocks
-            unmuted autoplay.
+            A slide can own a real audio element. This one plays a built-in, free-to-use
+            test tone, so you can exercise autostart, the scrubber, and the phone remote
+            without shipping any licensed media.
           </Text>
           <AudioPlayer
             autoStart
-            src="/assets/danger-zone.mp3"
-            subtitle="Kenny Loggins"
-            title="Danger Zone"
+            src={TEST_TONE_DATA_URI}
+            subtitle="Built-in · free to use"
+            title="Test tone (440 Hz)"
           />
           <Notes>
-            Test slide for the audio runtime. The track is referenced from
-            public/assets and is intentionally not committed. Autostart fires on slide
-            activation; if the browser blocks it, use the play button.
+            Test slide for the audio runtime. The tone is synthesised in the browser
+            (src/components/testTone.ts), so it is free to use and needs no committed
+            asset. Autostart fires on slide activation; if the browser blocks it, use the
+            play button. Use it to test the phone remote's audio controls too.
           </Notes>
         </FlexBox>
       </Slide>
