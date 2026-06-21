@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Lock, MonitorDot, Pause, Play, Send, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Lock, MonitorDot, Pause, Play, Send, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { DeckConfig } from "../deck-types";
@@ -38,6 +38,9 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   const [audio, setAudio] = useState<RemoteAudioState | null>(null);
   const [presenterCount, setPresenterCount] = useState(0);
   const [gotoValue, setGotoValue] = useState("1");
+  // Live slide-mirror preview, off by default (opt-in: it loads the full deck in
+  // an iframe and reloads on each navigation, which costs bandwidth/battery).
+  const [showPreview, setShowPreview] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const autoConnectPinRef = useRef<string | null>(null);
   const slideCount = state?.slideCount ?? deck.slideCount ?? 1;
@@ -47,7 +50,16 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
   // stamps each audio-state with its slide; if it does not match the current
   // slide (e.g. a "cleared" update was missed), keep the panel hidden.
   const showAudio = Boolean(audio?.hasAudio && audio.slideIndex === currentSlideIndex);
-  const notes = deck.presenterNotes?.[currentSlideIndex] ?? "No presenter notes for this slide.";
+  // Prefer the live note the presenter reads off the on-screen slide (always
+  // correct, even as slides move); fall back to the static array only when no
+  // presenter has pushed state yet.
+  const liveNotes = state?.notes?.trim();
+  const notes = liveNotes || deck.presenterNotes?.[currentSlideIndex] || "No presenter notes for this slide.";
+  const currentStepIndex = Math.max(0, state?.stepIndex ?? 0);
+  // Mirror the deck at the live slide/step in a read-only preview. Keyed on
+  // slide+step so the iframe remounts (and re-seeks) as the presenter advances.
+  const previewKey = `${currentSlideIndex}-${currentStepIndex}`;
+  const previewSrc = `/${deck.slug}/?slideIndex=${currentSlideIndex}&stepIndex=${currentStepIndex}&preview=1`;
 
   const progress = useMemo(() => {
     if (slideCount <= 1) return 100;
@@ -225,11 +237,41 @@ export function RemoteControllerPage({ deck }: RemoteControllerPageProps) {
           <MonitorDot size={18} />
           <span>{presenterCount > 0 ? "Live" : "Waiting"}</span>
         </div>
+        <button
+          className="remote-control__preview-toggle"
+          type="button"
+          aria-pressed={showPreview}
+          onClick={() => setShowPreview((value) => !value)}
+        >
+          {showPreview ? <EyeOff size={18} /> : <Eye size={18} />}
+          <span>{showPreview ? "Hide slide" : "Show slide"}</span>
+        </button>
       </section>
 
       <div className="remote-control__progress" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </div>
+
+      {showPreview ? (
+        <section className="remote-control__preview" aria-label="Current slide preview">
+          <iframe
+            key={previewKey}
+            className="remote-control__preview-frame"
+            src={previewSrc}
+            title={`Slide ${currentSlideNumber} preview`}
+            loading="lazy"
+            tabIndex={-1}
+            scrolling="no"
+            // allow-scripts (and NOT allow-same-origin) lets the deck's React app
+            // run while giving the frame an opaque origin it can't escape from —
+            // with both flags a same-origin frame can delete its own sandbox, so
+            // we deliberately omit allow-same-origin. The deck touches no
+            // localStorage/cookies, so the opaque origin is fine. preview=1
+            // disables the remote bridge and pointer-events:none blocks input.
+            sandbox="allow-scripts"
+          />
+        </section>
+      ) : null}
 
       <section className="remote-control__notes" aria-live="polite">
         <span>Notes</span>

@@ -16,6 +16,40 @@ type PrezzoSpectacleDeckProps = DeckProps & {
   remote?: PrezzoDeckRuntimeProps["remote"];
 };
 
+// Keep the presenting screen awake while a deck is on display. The Screen Wake
+// Lock API only works in a secure context (HTTPS or localhost), so present from
+// http://127.0.0.1:<port>/<slug>/ rather than the LAN IP for this to take hold.
+// The lock auto-releases when the tab is hidden, so re-acquire on visibility.
+function useScreenWakeLock() {
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return undefined;
+
+    let sentinel: WakeLockSentinel | null = null;
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        sentinel = await navigator.wakeLock.request("screen");
+      } catch {
+        // Denied, or not a secure context (e.g. served over http://LAN-IP).
+      }
+    };
+
+    const onVisibility = () => {
+      if (!cancelled && document.visibilityState === "visible") void acquire();
+    };
+
+    void acquire();
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+      void sentinel?.release().catch(() => undefined);
+    };
+  }, []);
+}
+
 function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"] }) {
   const deck = useContext(DeckContext);
   const deckRef = useRef(deck);
@@ -134,6 +168,11 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
       slideCount: deck.slideCount || remote.slideCount,
       slideIndex: deck.activeView.slideIndex,
       stepIndex: deck.activeView.stepIndex,
+      // Read the active slide's <Notes> straight from Spectacle's note portal.
+      // Only the active slide renders into it (Notes returns null unless its slide
+      // is active), so this is always the on-screen slide's note: single source of
+      // truth, co-located with the slide, immune to slide reordering.
+      notes: deck.notePortalNode?.textContent ?? "",
       type: "presenter-state",
     };
     const serialized = JSON.stringify(state);
@@ -161,6 +200,7 @@ function RemoteDeckBridge({ remote }: { remote?: PrezzoDeckRuntimeProps["remote"
 }
 
 export function PrezzoSpectacleDeck({ children, remote, ...deckProps }: PrezzoSpectacleDeckProps) {
+  useScreenWakeLock();
   return (
     <SpectacleDeck {...deckProps}>
       {children}

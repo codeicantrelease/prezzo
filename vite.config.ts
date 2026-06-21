@@ -204,6 +204,7 @@ function prezzoRemoteControlPlugin() {
           let message: {
             audio?: RemoteAudioState | null;
             command?: string;
+            notes?: string;
             slideCount?: number;
             slideIndex?: number;
             stepIndex?: number;
@@ -222,6 +223,7 @@ function prezzoRemoteControlPlugin() {
               slideCount: Math.max(1, Number(message.slideCount) || 1),
               slideIndex: Math.max(0, Number(message.slideIndex) || 0),
               stepIndex: Math.max(0, Number(message.stepIndex) || 0),
+              notes: typeof message.notes === "string" ? message.notes : undefined,
               updatedAt: Date.now(),
             };
 
